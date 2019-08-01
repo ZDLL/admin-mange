@@ -1,0 +1,321 @@
+<template>
+  <div class="columList-page">
+    <my-place :place-text='"专栏管理"'></my-place>
+    <!-- <div class="columList-top">
+      <el-row>
+        <el-col :span="8">
+          <div class="data-box">
+            <span>总共专栏数</span>
+            <strong>1000</strong>
+          </div>
+        </el-col>
+        <el-col :span="8">
+          <div class="data-box">
+            <span>今日专栏数</span>
+            <strong>1000</strong>
+          </div>
+        </el-col>
+        <el-col :span="8">
+          <div class="data-box">
+            <span>待审核文章数</span>
+            <strong>......</strong>
+          </div>
+        </el-col>
+      </el-row>
+    </div> -->
+    <div class="columList-cont">
+      <el-divider content-position="left">专栏列表</el-divider>
+    <div>
+       <!-- <mySearch :holder-txt='placehover' @searchVal='getSearchVal'/> -->
+        <el-button type="primary" size="medium" @click="addCloum">添加专栏</el-button>
+    </div>
+      <!-- <el-button-group>
+        <el-button type="primary" plain size="medium">图片</el-button>
+        <el-button type="primary" size="medium">视频</el-button>
+      </el-button-group>
+      <div class="time">
+        <div class="block">
+          <el-date-picker v-model="startTime" type="date" placeholder="选择开始日期"></el-date-picker>
+        </div>
+        <div class="block">
+          <el-date-picker v-model="endTime" type="date" placeholder="选择结束日期"></el-date-picker>
+        </div>
+      </div> -->
+     
+      
+      <div class='columList-table'>
+          <el-table :data="tableData" border style="width: 100%">
+            <el-table-column label="时间" property="create_time">
+            </el-table-column> 
+            <el-table-column label="标题" property="name">
+            </el-table-column>  
+            <el-table-column label="背景图片">
+                <template slot-scope="scope">
+                   <el-image v-if='scope.row.picture' :src='scope.row.picture' lazy></el-image>
+                    <!-- <img v-if='scope.row.picture' :src='scope.row.picture'/> -->
+                </template>
+            </el-table-column>  
+             <el-table-column label="动态数" property="publish_num">
+            </el-table-column>  
+
+            <el-table-column fixed="right" label="操作" width="200">
+                <template slot-scope="scope">
+                <el-button type="text" @click="columEditor(scope.row)">编辑</el-button>
+                <el-button type="text" @click="columDel(scope.row)">删除</el-button>
+                <el-button type="text" @click="toCloumDetail(scope.row)">查看</el-button>
+                </template>
+            </el-table-column>
+        </el-table>
+      </div>
+        <MyPackage v-if='total' :key='total' :pageTotal='total' @handleCurrent='handleCurrentFunc'></MyPackage>
+      <!-- <MyPackage :page-total='total' @handleCurrent='handleCurrentFun'></MyPackage> -->
+    </div>
+
+
+    <el-dialog :title='title'  width="50%" :visible.sync="dialogFormVisible">
+        <div>
+            <el-row class='mt20'>
+                <el-col :span="4">专栏背景图:</el-col>
+                <el-col :span="12">   
+                    <span class="avatar-uploader" @click="uploadBtn">
+                        <i class="el-icon-plus avatar-uploader-icon"></i>
+                        <myUpload @getFile="fileUrlFun"/>
+                        <!-- <el-image v-if='cloumData.picture' :src='cloumData.picture' lazy></el-image> -->
+                        <img v-if="cloumData.picture" :src="cloumData.picture" alt="头像" />
+                        
+                    </span>
+
+                </el-col>
+            </el-row>
+            <el-row class='mt20'>
+                <el-col :span="4">专栏标题:</el-col>
+                <el-col :span="12">   
+                    <el-input
+                    placeholder="请输入内容"
+                    v-model="cloumData.name"
+                    clearable>
+                </el-input>
+                </el-col>
+            </el-row>
+            <el-row class='mt20'>
+                <el-col :span="4">英文标题:</el-col>
+                <el-col :span="12">   
+                    <el-input
+                    placeholder="请输入内容"
+                    v-model="cloumData.en_name"
+                    clearable>
+                </el-input>
+                </el-col>
+            </el-row>
+            <el-row class='mt20'>
+                <el-col :span="4">专栏副标题:</el-col>
+                <el-col :span="12">   
+                    <el-input
+                    placeholder="请输入内容"
+                    v-model="cloumData.sub_name"
+                    clearable>
+                </el-input>
+                </el-col>
+            </el-row>
+             <el-row class='mt20'>
+                <el-col :span="4">专栏介绍:</el-col>
+                <el-col :span="12">   
+                    <el-input
+                    placeholder="请输入内容"
+                    v-model="cloumData.describe"
+                    clearable>
+                </el-input>
+                </el-col>
+            </el-row>
+           
+            <el-row class='mt20'>
+                 <el-col :span="4"></el-col>
+                 <el-button style="width:50%;margin-left:17%;margin-top:10px;" type="primary" @click="sureSubmit">确认提交</el-button>
+            </el-row>
+            
+        </div>
+    </el-dialog>
+  </div>
+</template>
+<script>
+import place from "../../../components/place.vue";
+import myUpload from '../../../components/upload';
+import MyPackage from "../../../components/package.vue";
+import mySearch from "../../../components/search.vue";
+export default {
+  name: "columlist",
+  data() {
+    return {
+      startTime: "",
+      endTime: "",
+      dialogFormVisible:false,
+      input:"",
+      total:0,
+      title:"",
+      btnType:1,//1编辑2修改
+      cloumData:{
+        picture:"",
+        name:'',
+        en_name:"",
+        sub_name:"",
+        describe:""
+      },
+      tableData: [],
+      total:0,
+      placehover:"关键词搜索"
+
+    };
+  },
+  components: {
+    "my-place": place,
+      myUpload,
+      MyPackage,
+      mySearch
+  },
+  methods: {
+      async cloumListFunc(objData){
+       await this.$store.dispatch("colunModule/getCategoryListAct",objData)
+        let data = this.$store.state.colunModule.categoryList;
+        if(data.code == 10000){
+          this.tableData=data.info.result
+          this.total = parseInt(data.info.total)
+        }
+      },
+      async edoitorCloum(){
+        await this.$store.dispatch('colunModule/editCategoryAct',this.cloumData);
+        let data = this.$store.state.colunModule.editCategory
+        if(data.code ==10000){
+          this.$message.success("编辑成功");
+           this.dialogFormVisible=false;
+          this.cloumListFunc({});
+        }
+      },
+      async cloumDetail(postObj){
+          await this.$store.dispatch("colunModule/getCategoryDetailAct",postObj)
+          let data = this.$store.state.colunModule.categoryDetail;
+          if(data.code == 10000){
+            this.cloumData={};
+            this.cloumData=data.info;
+            this.dialogFormVisible=true;
+          }
+      },
+      async addCloumFun(){
+        await this.$store.dispatch('colunModule/addCategoryAct',this.cloumData);
+        let data = this.$store.state.colunModule.addCloumData;
+        if(data.code == 10000){
+          this.$message.success("添加成功")
+          this.dialogFormVisible = false;
+          this.cloumListFunc({})
+        }
+      },
+      async delCategory(objData){
+        //
+        await this.$store.dispatch('colunModule/delCategoryAct',objData);
+        let data = this.$store.state.colunModule.delCategory;
+        this.$message.success("删除成功");
+        this.cloumListFunc({})
+      },
+      columEditor(row){
+        this.title ='编辑专栏'
+        // this.cloumData = row;
+        this.btnType =2;
+        this.cloumDetail({id:row.id})
+      },
+      addCloum(){
+          this.dialogFormVisible=true;
+          this.cloumData={
+            picture:"",
+            name:'',
+            en_name:"",
+            sub_name:"",
+            describe:""
+          } ;
+          this.btnType =1;
+          this.title ='添加专栏'
+      },
+      columDel(row){
+        this.delCategory({id:row.id})
+      },
+      toCloumDetail(row){
+         this.$router.push({
+           path:"/columndetail",
+           query:{
+             id:row.id
+           }
+         })
+      },
+      uploadBtn(){
+         document.querySelector("#uploader").click();
+      },
+      fileUrlFun(url){
+        this.cloumData.picture = url;
+      },
+      sureSubmit(){
+        if(this.btnType==1){
+           this.addCloumFun();
+        }else{
+          this.edoitorCloum();
+        }
+       
+      },
+      handleCurrentFunc(val){
+        this.cloumListFunc({page_size:10,current_page:val})
+      },
+      getSearchVal(val){
+         this.cloumListFunc({page_size:10,current_page:val})
+      }
+  },
+  created() {
+    this.cloumListFunc({})
+  },
+  mounted() {
+  },
+  filters: {}
+};
+</script>
+<style lang="scss">
+@import "@/style/topbox.scss";
+@import '@/style/avatar-uploader.scss';
+.columList-page {
+    .mt20{
+        margin-top: 20px;
+    }
+  .columList-top,
+  .columList-cont {
+    padding: 20px;
+    background-color: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .columList-cont {
+    margin-top: 20px;
+    .time {
+      display: inline-block;
+      vertical-align: top;
+      margin-left: 20px;
+      .block {
+        display: inline-block;
+        vertical-align: top;
+        margin-right: 20px;
+        .el-input__inner {
+          height: 36px;
+          line-height: 36px;
+        }
+      }
+    }
+    .columList-table{
+        border: 1px solid #ebeef5;
+        border-radius: 8px;
+        overflow: hidden;
+        margin-top: 30px;
+    }
+    .el-table__row{
+        img{
+          max-width: 80px;;
+          // height: 60px;
+          }
+    }
+  }
+}
+</style>
+

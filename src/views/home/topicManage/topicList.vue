@@ -1,0 +1,286 @@
+<template>
+  <div class="topic-page">
+    <my-place :place-text="title"></my-place>
+    <!-- <div class="topic-top">
+      <el-row>
+        <el-col :span="10">
+          <div class="data-box">
+            <span>话题总数</span>
+            <strong>1000</strong>
+          </div>
+        </el-col>
+        <el-col :span="10">
+          <div class="data-box">
+            <span>最高话题 你真美</span>
+            <strong>1000</strong>
+          </div>
+        </el-col>
+        <el-col :span="8">
+                <div class="data-box">
+                    <span>待审核文章数</span>
+                    <strong>......</strong>
+                </div>
+        </el-col>
+      </el-row>
+    </div> -->
+    <div class="topic-cont">
+      <el-divider content-position="left">话题列表</el-divider>
+      <mySearch :holderTxt ='holdTxt' @searchVal='getSearchTxt'></mySearch>
+      <el-button style="float:right" type="primary" size="medium" @click="AddtopicBtn">添加话题</el-button>
+      <div class="topicList-table">
+        <el-table :data="tableData" border style="width: 100%">
+          <el-table-column label="话题头像">
+              <template slot-scope="scope">
+                 <el-image :src='scope.row.picture' lazy></el-image>
+              </template>
+          </el-table-column>
+          <el-table-column
+            v-for="(itm,index) in tableHead"
+            :key="index"
+            :prop="itm.prop"
+            :label="itm.label"
+          ></el-table-column>
+
+          <el-table-column fixed="right" label="操作" width="240">
+            <template slot-scope="scope">
+              <el-button type="text" @click="topicEditor(scope.row)">编辑</el-button>
+              <el-button type="text" @click='topicChange(scope.row)'>下架</el-button>
+              <el-button type="text" @click='topicDel(scope.row)'>删除</el-button>
+              <el-button type="text" @click="topicToView(scope.row)">查看</el-button>
+            </template>
+          </el-table-column>
+        </el-table>
+      </div>
+       <myPackge v-if='total' :key='total' :pageTotal='total' @handleCurrent='handleCurrentFunc'></myPackge>
+    </div>
+
+    <el-dialog :title="title" width="50%" :visible.sync="dialogFormVisible">
+      <div>
+        <el-row class="mt20">
+          <el-col :span="4">话题头像:</el-col>
+          <el-col :span="12">
+            <span class="avatar-uploader" @click='uploadBtn'>
+              <i class="el-icon-plus avatar-uploader-icon"></i>
+              <img v-if="topicPostData.picture" :src="topicPostData.picture" alt="头像" />
+            </span>
+            <upload @getFile='getImgUrl'></upload>
+          </el-col>
+        </el-row>
+        <el-row class="mt20">
+          <el-col :span="4">话题标题:</el-col>
+          <el-col :span="12">
+            <el-input placeholder="请输入内容" v-model='topicPostData.name' clearable></el-input>
+          </el-col>
+        </el-row>
+        <!-- <el-row class="mt20">
+          <el-col :span="4">话题副标题:</el-col>
+          <el-col :span="12">
+            <el-input placeholder="请输入内容" clearable></el-input>
+          </el-col>
+        </el-row> -->
+        <el-row class="mt20">
+          <el-col :span="4">话题描述:</el-col>
+          <el-col :span="12">
+            <el-input placeholder="请输入内容" v-model="topicPostData.describe" clearable></el-input>
+          </el-col>
+        </el-row>
+        <el-row class="mt20">
+          <el-col :span="4">设置话题顺序:</el-col>
+          <el-col :span="12">
+            <el-input placeholder="请输入内容" v-model="topicPostData.sort" clearable></el-input>
+          </el-col>
+        </el-row>
+
+        <el-row class="mt20">
+          <el-col :span="4"></el-col>
+          <el-button style="width:50%;margin-left:17%;margin-top:10px;" type="primary" @click="topicBtn">确认提交</el-button>
+        </el-row>
+      </div>
+    </el-dialog>
+  </div>
+</template>
+<script>
+import place from "../../../components/place.vue";
+import upload from '../../../components/upload.vue';
+import myPackge from '../../../components/package.vue';
+import mySearch from '../../../components/search.vue'
+import { setTimeout } from 'timers';
+
+export default {
+  name: "topic",
+  imageUrl: "",
+  data() {
+    return {
+      title: "话题管理",
+      holdTxt:"标题",
+      dialogFormVisible: false,
+      num:{},
+      input: "",
+      imageUrl: "",
+      topicId:"",
+      total:0,
+      topicPostData:{
+        name:'',
+        describe:"",
+        picture:"",
+        sort:"",
+        page_size:10,
+        current_page:1
+      },
+      tableHead: [
+        { prop: "name", label: "话题名称" },
+        // { prop: "b", label: "话题描述" },
+        // { prop: "picture", label: "话题头像" },
+        { prop: "sort", label: "话题顺序" },
+        { prop: "publish_num", label: "动态数" }
+      ],
+      tableData: []
+    };
+  },
+  components: {
+    "my-place": place,
+      upload,
+      myPackge,
+      mySearch
+  },
+  methods: {
+    async getTopicList(){
+      await this.$store.dispatch("topicModule/topicListaAct",this.topicPostData);
+      let data = this.$store.state.topicModule.topicListData;
+      this.tableData = data.info.result;
+      this.num = data.num;
+      this.total = parseInt(data.info.total)
+    },
+    async setAddTopic(){
+      await this.$store.dispatch("topicModule/topicAddAct",this.topicPostData)
+      let data = this.$store.state.topicModule.topicAddData;
+      if(data.code == 10000){
+        this.$message.success("添加成功")
+        let _this =this;
+        setTimeout(()=>{
+          _this.getTopicList();
+          _this.dialogFormVisible = false;
+        },1000)
+      }
+    },
+    async getTopicDetail(){
+      await this.$store.dispatch('topicModule/topicDetailAct',{id:this.topicId});
+      let data = this.$store.state.topicModule.topicDetailData;
+      this.topicPostData =  data.info;
+       this.topicPostData.name = data.info.name
+    },
+    async setEditTopic(){
+      await this.$store.dispatch("topicModule/topicEditAct",this.topicPostData);
+        let data  = this.$store.state.topicModule.topicEditData;
+        this.$message.success("编辑成功");
+        this.dialogFormVisible =  false;
+        this.getTopicList();
+    },
+    async setChangeTopic(){
+      await this.$store.dispatch("topicModule/changeTopicAct",{id:this.topicId})
+      let data =this.$store.state.topicModule.changeTopicData;
+      this.$message.success("下架操作成功")
+      this.getTopicList();
+    },
+    async delTopic(){
+      await this.$store.dispatch("topicModule/topicDelAct",{id:this.topicId});
+      let data = this.$store.state.topicModule.topicDelData;
+      this.$message.success("删除成功")
+      this.getTopicList();
+    },
+    getImgUrl(url){
+      this.topicPostData.picture = url;
+    },
+    uploadBtn(){
+      document.querySelector("#uploader").click();
+    },
+    topicEditor(row) {
+      this.dialogFormVisible = true;
+      this.topicId = row.id;
+      this.getTopicDetail();
+    },
+    topicToView(row) {
+      this.$router.push({
+        path: "/topicdetail",
+        query:{
+          id:row.id
+        }
+      });
+    },
+    AddtopicBtn(){
+      this.topicId = '';
+      this.dialogFormVisible = true;
+    },
+    topicBtn(){
+
+      if(this.topicPostData.name.length>10){
+        this.$message.error("话题标题请在10字以内");
+        return
+      }
+      if(this.topicPostData.describe.length>300){
+        this.$message.error("话题描述请在300字以内");
+        return
+      }
+      if(!this.topicId){
+         this.setAddTopic();
+      }else{
+        this.topicPostData.id = this.topicId;
+        this.setEditTopic()
+      }
+    },
+    handleCurrentFunc(current){
+      this.topicPostData={}
+      this.topicPostData.current_page = current;
+      this.topicPostData.page_size=10;
+      this.getTopicList(this.topicPostData)
+    },
+    topicChange(row){
+      this.topicId = row.id;
+      this.setChangeTopic();
+    },
+    topicDel(row){
+      this.topicId = row.id;
+      this.delTopic()
+    },
+    getSearchTxt(val){
+      this.topicPostData.current_page=1;
+      this.topicPostData.title = val
+      this.getTopicList()
+    }
+  },
+  created() {
+    this.topicPostData={};
+    this.getTopicList()
+  },
+  mounted() {},
+  filters: {}
+};
+</script>
+<style lang="scss">
+@import "@/style/topbox.scss";
+@import "@/style/avatar-uploader.scss";
+.topic-page {
+  .mt20 {
+    margin-top: 20px;
+  }
+  .topic-top,
+  .topic-cont {
+    padding: 20px;
+    border-radius: 8px;
+    background-color: #fff;
+    overflow: hidden;
+  }
+  .topic-cont {
+    margin-top: 20px;
+    .topicList-table {
+      border: 1px solid #ebeef5;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-top: 20px;
+    }
+  }
+}
+</style>
+
+
+
