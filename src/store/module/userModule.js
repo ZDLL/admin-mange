@@ -8,7 +8,9 @@ const state = {
     userAddCert:{},
     delUserCert:{},
     addCerttoUser:{},
-    recommendUser:{}
+    recommendUser:{},
+    systemUser:{},
+    getSystemUser:{}
 
 }
 // getters
@@ -37,7 +39,14 @@ const actions = {//异步
     },
     async setRecommendUserAct(context,parm){//设置用户的推荐
         context.commit("setRecommendUserMut",await untill.getData(apiUrl.recommenduser,qs.stringify(parm)))
-    }
+    },
+    async addSystemUserAct(context,parm){//设置用户的推荐
+        context.commit("addSystemUserMut",await untill.getData(apiUrl.addsystemuser,qs.stringify(parm)))
+    },
+    async getSystemUserAct(context,parm){//设置用户的推荐
+        context.commit("getSystemUserMut",await untill.getData(apiUrl.getsystemuser,qs.stringify(parm)))
+    },
+    //addsystemuser
 }
 // mutations
 const mutations = {//同步
@@ -61,6 +70,12 @@ const mutations = {//同步
    },
    setRecommendUserMut(state,data){
     state.recommendUser= data.data
+   },
+   addSystemUserMut(state,data){
+    state.systemUser= data.data
+   },
+   getSystemUserMut(state,data){
+    state.getSystemUser= data.data
    }
 }
 

@@ -10,9 +10,9 @@ import myFilter from './comm/comfilter'
 
 //富文本
 import VueQuillEditor from "vue-quill-editor"
-import "quill/dist/quill.core.css"
-import "quill/dist/quill.snow.css"
-import "quill/dist/quill.bubble.css"
+import "quill/dist/quill.core.css";
+import "quill/dist/quill.snow.css";
+import "quill/dist/quill.bubble.css";
 import { Message } from "element-ui";
 Vue.use(VueQuillEditor)
 Vue.use(ElementUI)
@@ -42,6 +42,16 @@ Viewer.setDefaults({ zIndexInline: 9999 });
 //     }
 //   }
 // });
+
+router.afterEach((to,from)=>{
+  if(to.path !='/login'){
+    const token = window.localStorage.getItem("token");
+    if(!token){
+      Message.error("请登录以后在进行操作！");
+      router.push({path: "/login"})
+    }
+  }
+})
 Object.keys(myFilter).forEach(key => {
   Vue.filter(key, myFilter[key])
 })

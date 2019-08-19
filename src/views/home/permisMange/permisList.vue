@@ -48,10 +48,11 @@ export default {
 </script>
 <style lang="scss">
 .perminsListCont {
-  background-color: #fff;
-  border-radius: 8px;
-  overflow: hidden;
-  padding: 20px;
+  // background-color: #fff;
+  // border-radius: 8px;
+  // overflow: hidden;
+  // padding: 20px;
+   @extend %extreme;
   .mt20 {
     margin-top: 30px;
   }

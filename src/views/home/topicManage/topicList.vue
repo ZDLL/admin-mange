@@ -31,7 +31,9 @@
         <el-table :data="tableData" border style="width: 100%">
           <el-table-column label="话题头像">
               <template slot-scope="scope">
-                 <el-image :src='scope.row.picture' lazy></el-image>
+                <img v-if='scope.row.picture' :src='scope.row.picture' />
+                <!-- <el-image v-if='scope.row.picture' :src='scope.row.picture' lazy></el-image> -->
+                <span v-else>---</span>
               </template>
           </el-table-column>
           <el-table-column
@@ -40,11 +42,16 @@
             :prop="itm.prop"
             :label="itm.label"
           ></el-table-column>
+           <el-table-column label="是否上架">
+              <template slot-scope="scope">
+                 {{scope.row.status|fileterYesOrNo}}
+              </template>
+          </el-table-column>
 
           <el-table-column fixed="right" label="操作" width="240">
             <template slot-scope="scope">
               <el-button type="text" @click="topicEditor(scope.row)">编辑</el-button>
-              <el-button type="text" @click='topicChange(scope.row)'>下架</el-button>
+              <el-button type="text" @click='topicChange(scope.row)'>{{scope.row.status | statusChange}}</el-button>
               <el-button type="text" @click='topicDel(scope.row)'>删除</el-button>
               <el-button type="text" @click="topicToView(scope.row)">查看</el-button>
             </template>
@@ -57,7 +64,7 @@
     <el-dialog :title="title" width="50%" :visible.sync="dialogFormVisible">
       <div>
         <el-row class="mt20">
-          <el-col :span="4">话题头像:</el-col>
+          <el-col :span="4"><span class='my-span-notice'>*</span>话题头像:</el-col>
           <el-col :span="12">
             <span class="avatar-uploader" @click='uploadBtn'>
               <i class="el-icon-plus avatar-uploader-icon"></i>
@@ -67,9 +74,9 @@
           </el-col>
         </el-row>
         <el-row class="mt20">
-          <el-col :span="4">话题标题:</el-col>
+          <el-col :span="4"><span class='my-span-notice'>*</span>话题标题:</el-col>
           <el-col :span="12">
-            <el-input placeholder="请输入内容" v-model='topicPostData.name' clearable></el-input>
+            <el-input placeholder="请输入内容" v-model='topicPostData.name' show-word-limit  maxlength="10"></el-input>
           </el-col>
         </el-row>
         <!-- <el-row class="mt20">
@@ -79,15 +86,15 @@
           </el-col>
         </el-row> -->
         <el-row class="mt20">
-          <el-col :span="4">话题描述:</el-col>
+          <el-col :span="4"><span class='my-span-notice'>*</span>话题描述:</el-col>
           <el-col :span="12">
-            <el-input placeholder="请输入内容" v-model="topicPostData.describe" clearable></el-input>
+            <el-input placeholder="请输入内容" type='textarea' v-model="topicPostData.describe" show-word-limit  maxlength="300"></el-input>
           </el-col>
         </el-row>
         <el-row class="mt20">
-          <el-col :span="4">设置话题顺序:</el-col>
+          <el-col :span="4"><span class='my-span-notice'>*</span>设置话题顺序:</el-col>
           <el-col :span="12">
-            <el-input placeholder="请输入内容" v-model="topicPostData.sort" clearable></el-input>
+            <el-input type="number" placeholder="请输入1以上的数字" v-model="topicPostData.sort" clearable></el-input>
           </el-col>
         </el-row>
 
@@ -103,7 +110,8 @@
 import place from "../../../components/place.vue";
 import upload from '../../../components/upload.vue';
 import myPackge from '../../../components/package.vue';
-import mySearch from '../../../components/search.vue'
+import mySearch from '../../../components/search.vue';
+import until from '../../../comm/until.js'
 import { setTimeout } from 'timers';
 
 export default {
@@ -128,10 +136,11 @@ export default {
         current_page:1
       },
       tableHead: [
-        { prop: "name", label: "话题名称" },
-        // { prop: "b", label: "话题描述" },
+        // { prop: "describe", label: "话题描述" },
+        { prop: "id", label: "话题ID" },
         // { prop: "picture", label: "话题头像" },
         { prop: "sort", label: "话题顺序" },
+        // { prop: "status", label: "是否上架" },
         { prop: "publish_num", label: "动态数" }
       ],
       tableData: []
@@ -212,13 +221,16 @@ export default {
       this.dialogFormVisible = true;
     },
     topicBtn(){
-
-      if(this.topicPostData.name.length>10){
-        this.$message.error("话题标题请在10字以内");
+      if(!this.topicPostData.picture){
+        this.$message.warning("请上传话题头像")
         return
       }
-      if(this.topicPostData.describe.length>300){
-        this.$message.error("话题描述请在300字以内");
+      if(!this.topicPostData.name){
+        this.$message.warning("请添加话题标题")
+        return
+      }
+      if(!this.topicPostData.describe){
+        this.$message.warning("请添加话题描述");
         return
       }
       if(!this.topicId){
@@ -236,11 +248,19 @@ export default {
     },
     topicChange(row){
       this.topicId = row.id;
-      this.setChangeTopic();
+      let _this =this
+      until.myConfirm(_this, `是否确认进行${row.status==1?"下架":"上架"}操作？`,function(val){
+         _this.setChangeTopic();
+      })
+     
     },
     topicDel(row){
       this.topicId = row.id;
-      this.delTopic()
+      let _this =this;
+      until.myConfirm(_this,"是否删除该话题？",function(val){
+         _this.delTopic()
+      })
+     
     },
     getSearchTxt(val){
       this.topicPostData.current_page=1;
@@ -249,11 +269,23 @@ export default {
     }
   },
   created() {
-    this.topicPostData={};
-    this.getTopicList()
+    // this.topicPostData={};
+    this.getTopicList();
   },
   mounted() {},
-  filters: {}
+  filters: {
+    statusChange(val){
+       if(!val){
+        return
+      }
+      switch(parseInt(val)){
+        case 1:
+          return "下架"
+        case 2:
+          return "上架"
+      }
+    }
+  }
 };
 </script>
 <style lang="scss">
@@ -265,18 +297,20 @@ export default {
   }
   .topic-top,
   .topic-cont {
-    padding: 20px;
-    border-radius: 8px;
-    background-color: #fff;
-    overflow: hidden;
+    // padding: 20px;
+    // border-radius: 8px;
+    // background-color: #fff;
+    // overflow: hidden;
+     @extend %extreme;
   }
   .topic-cont {
     margin-top: 20px;
     .topicList-table {
-      border: 1px solid #ebeef5;
-      border-radius: 8px;
-      overflow: hidden;
-      margin-top: 20px;
+      @extend %tableborder;
+      img{
+        height: 80px;
+        width: auto;
+      }
     }
   }
 }

@@ -14,9 +14,11 @@
                 <div class='header-cont'>
                     <span class='goback' @click="goBack"><i class='el-icon-back'></i>返回</span>
                     <span class='exit' @click="exitBtn">退出</span>
+                    <span class='exit' style="margin-right:20px">{{userName}}</span>
+                   
                 </div>
             </el-header>
-            <el-main>
+            <el-main id='searchBar'>
                 <router-view/>
                 <!-- <my-page :page-total='total' @handleCurrent='handleCurrentFun'/> -->
             </el-main>
@@ -36,7 +38,8 @@ export default {
     },
     data(){
         return{
-            total:100
+            total:100,
+            userName:""
         }
     },
     methods:{
@@ -57,6 +60,9 @@ export default {
         goBack(){
              this.$router.go(-1);//返回上一层
         }
+    },
+    mounted(){
+        this.userName = untill.getStore("name")
     }
 }
 </script>

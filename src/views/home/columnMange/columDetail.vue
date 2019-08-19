@@ -20,10 +20,7 @@
               英文标题：
               <span class="bold">{{cloumDetailData.en_name}}</span>
             </p>
-            <p>
-              专栏介绍：
-              <span class="bold">{{cloumDetailData.describe}}</span>
-            </p>
+           
           </div>
         </el-col>
         <el-col :span="7">
@@ -39,6 +36,10 @@
           </div>
         </el-col>
       </el-row>
+      <p style="margin-top:30px;margin-left: 15px">
+        专栏介绍：
+        <span class="bold">{{cloumDetailData.describe}}</span>
+      </p>
     </div>
     <div class="cloumDetail-cont">
       <el-divider content-position="left">文章列表</el-divider>
@@ -46,7 +47,9 @@
         <el-table :data="tableData" border style="width: 100%">
            <el-table-column label="封面">
              <template  slot-scope="scope">
-                <el-image v-if="scope.row.picture" :src="scope.row.picture" lazy></el-image>
+                <img v-if="scope.row.picture" :src="scope.row.picture" alt="封面图片" />
+                <span v-else>无图片</span>
+                <!-- <el-image v-if="scope.row.picture" :src="scope.row.picture" lazy></el-image> -->
              </template>
            </el-table-column>
 
@@ -90,6 +93,7 @@
 </template>
 <script>
 import place from "../../../components/place.vue";
+import until from '../../../comm/until.js';
 export default {
   name: "cloumdetail",
   data() {
@@ -100,7 +104,7 @@ export default {
       num:0,
       packTotal:0,
       tableHead: [
-        // { prop: "picture", label: "封面" },
+        { prop: "id", label: "文章ID" },
         { prop: "category", label: "标题" },
         { prop: "nickname", label: "作者" },
         { prop: "cert", label: "所属专栏" },
@@ -181,13 +185,16 @@ export default {
       this.setIscover(postData);
     },
     delArticBtn(row){
-        this.delArticle({id:row.id})
+        let _this = this;
+        until.myConfirm(_this, `是否删除该文章？`,function(val){
+            _this.delArticle({id:row.id})
+        })
+      // this.confirm("是否删除该文章？",row.id)
     }
   },
   created() {
     this.id =this.$route.query.id;
     this.cloumDetail();
-    console.log(this.id)
     this.getArticList()
   },
   mounted() {},
@@ -221,18 +228,22 @@ export default {
   }
   .cloumDetail-top,
   .cloumDetail-cont {
-    background-color: #fff;
-    border-radius: 8px;
-    overflow: hidden;
-    padding: 20px;
+    // background-color: #fff;
+    // border-radius: 8px;
+    // overflow: hidden;
+    // padding: 20px;
+    @extend %extreme;
   }
   .cloumDetail-cont {
-    margin-top: 20px;
+    // margin-top: 20px;
   }
   .cloumDetail-top-txt {
-    line-height: 1.9;
+    line-height: 2;
     font-size: 14px;
     color: #666;
+    P{
+      margin-top: 10px;
+    }
 
     .back {
       display: inline-block;
@@ -261,10 +272,11 @@ export default {
     }
   }
   .artic-table {
-    border: 1px solid #ebeef5;
-    border-radius: 8px;
-    overflow: hidden;
-    margin-top: 40px;
+    @extend %tableborder;
+    img{
+      height: 80px;
+      width: auto;
+    }
   }
 }
 </style>

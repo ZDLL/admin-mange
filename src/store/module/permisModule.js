@@ -12,7 +12,10 @@ const state = {
     adminListData:{},
     AddadminData:{},
     delAdminData:{},
-    editPassword:{}
+    editPassword:{},
+    adminGetdetail:{},
+    editoperator:{},
+
 }
 // getters
 const getters = {//同步
@@ -52,6 +55,12 @@ const actions = {//异步
     async editPasswordAct(context,parm){
         context.commit("editPasswordMut",await untill.getData(apiUrl.editPassword,qs.stringify(parm)))
     },
+    async adminGetdetailArt(context,parm){
+        context.commit("adminGetdetailMut",await untill.getData(apiUrl.adminGetdetail,qs.stringify(parm)))
+    },
+    async editoperatorArt(context,parm){
+        context.commit("editoperatorMut",await untill.getData(apiUrl.editoperator,qs.stringify(parm)))
+    }
 }
 // mutations
 const mutations = {//同步
@@ -86,6 +95,13 @@ const mutations = {//同步
     editPasswordMut(state,data){
         state.editPassword =data.data
     },
+    adminGetdetailMut(state,data){
+        state.adminGetdetail = data.data;
+    },
+    editoperatorMut(state,data){
+        state.editoperator = data.data;
+    },
+
 }
 
 export default {

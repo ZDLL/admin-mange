@@ -2,25 +2,35 @@
   <div class="arcticle-page">
     <my-place :place-text="tit"></my-place>
     <div class="article-cont">
+       <div v-if="hasQuill" style="margin-bottom:20px">
+        <my-quillEditor v-if="quillCont" :parentEditorCont="quillCont" @quillEditorFun="getcont"></my-quillEditor>
+      </div>
+      <div v-else style="margin-bottom:20px">
+        <my-quillEditor :parentEditorCont='""' @quillEditorFun="getcont"></my-quillEditor>
+      </div>
       <div class="avatar">
-        上传封面:
+        <span class='my-span-notice'>*</span>上传封面:
         <span class="avatar-uploader left10" @click="avatarUpload">
           <i class="el-icon-plus avatar-uploader-icon"></i>
           <img v-if="postData.picture" :src="postData.picture" alt="头像" />
           <!-- <el-image v-if="imageUrl" :src="imageUrl" lazy></el-image> -->
         </span>
         <my-upload @getFile="fileUrlFun"></my-upload>
+        <p style="color: rgb(153, 153, 153); font-size: 12px;margin-left: 82px;margin-top: 8px"><span style="color:red">注</span>：封面请上传375*256的倍数</p>
       </div>
       <div class="mgt20">
-        标题:
-        <el-input class="with40 left10" v-model="postData.title" placeholder="请输入标题"></el-input>
+        <span class='my-span-notice'>*</span>标题:
+        <el-input class="with40 left10" v-model="postData.title" show-word-limit maxlength="30" placeholder="请输入标题"></el-input>
       </div>
       <div class="mgt20">
-        作者:
-        <el-input class="with40 left10" v-model="postData.author" placeholder="请输入作者"></el-input>
+        <span class='my-span-notice'>*</span>作者:
+        <el-select class="left10" v-model="postData.author" placeholder="请选择">
+          <el-option v-for="item in authorOptions" :key="item.id" :label="item.nickname" :value="item.user_id"></el-option>
+        </el-select>
+        <!-- <el-input class="with40 left10" v-model="postData.author" placeholder="请输入作者ID"></el-input> -->
       </div>
       <div class="mgt20">
-        所属专栏:
+       <span class='my-span-notice'>*</span> 所属专栏:
         <el-select class="left10" v-model="postData.category" placeholder="请选择">
           <el-option v-for="item in options" :key="item.id" :label="item.name" :value="item.id"></el-option>
         </el-select>
@@ -36,13 +46,13 @@
             </el-option>
         </el-select>
       </div>-->
-      <div class="mgt20">
+      <!-- <div class="mgt20">
         是否投放到每日精选:
         <span class="left10">
           <el-radio v-model="postData.is_select" label="1">是</el-radio>
           <el-radio v-model="postData.is_select" label="2">否</el-radio>
         </span>
-      </div>
+      </div> -->
       <!-- <div style="margin-top:30px">
          <el-button-group>
             <el-button type="primary" plain>文字</el-button>
@@ -50,14 +60,49 @@
             <el-button type="primary" plain>视频</el-button>
         </el-button-group>
       </div>-->
-      <div v-if="hasQuill" style="margin-top:30px">
-        <my-quillEditor v-if="quillCont" :parentEditorCont="quillCont" @quillEditorFun="getcont"></my-quillEditor>
-      </div>
-      <div v-else style="margin-top:30px">
-        <my-quillEditor :parentEditorCont='""' @quillEditorFun="getcont"></my-quillEditor>
-      </div>
 
-      <el-button style="width:120px;margin-top:30px" @click="articleSure" type="primary">确认</el-button>
+      <el-button class='mybtnstyle' @click="articleSure" type="primary">确认发布</el-button>
+      <el-button class='mybtnstyle' @click="draftClick" plain type="primary">添加草稿</el-button>
+
+      <el-button class='mybtnstyle' @click='previewClick'>预览文章</el-button>
+
+      
+    </div>
+
+    <!-- 预览弹层 -->
+    <div class='preview' v-show='preview'>
+     
+      <div class ='preview-warp'>
+         <div class='close' @click="closeClick">
+          <i class='el-icon-circle-close'></i>
+        </div>
+        <div class='preview-cont'>
+          <div class='preview-cont-warp'>
+            <div class='preview-top-img'>
+              <img :src='postData.picture' />
+              <div class='preview-type'>
+                {{categoryName}}
+              </div>
+            </div>
+            <div class='preview-mind-cont'>
+              <div class='title'>
+                {{postData.title}}
+              </div>
+              <div class='preview-author'>
+                <span class='author-span'>头像</span>
+                <span>用户名</span>
+                <br>
+                <span>用户标签</span>
+                <span class='guanzhu'> + 关注</span>
+                
+              </div>
+              <div class='xian'></div>
+              <div class='text ql-editor' v-html='postData.content'>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -76,6 +121,8 @@ export default {
       id: "",
       hasQuill: false,
       options: [],
+      authorOptions:[],
+      cont:"",
       postData: {
         author: "",
         category: "",
@@ -83,8 +130,13 @@ export default {
         picture: "",
         // content_picture:"",
         content: "",
-        is_select: "2"
-      }
+        // is_select: "2"
+      },
+      preview:false,
+      pos:0,
+      categoryName:'',
+      is_draft:false,
+      draft_id:""
     };
   },
   components: {
@@ -102,6 +154,9 @@ export default {
       }
     },
     async addArticle() {
+      // this.postData.content=`<div>${this.postData.content.replace(/\<p>/g, "<p style='line-height:20px;'>")}</div>`;
+      // console.log(this.postData.content)
+      // return false
       await this.$store.dispatch("articleModule/arcticleAddAct", this.postData);
       let data = this.$store.state.articleModule.arcticleAdd;
       if (data.code == 10000) {
@@ -112,14 +167,19 @@ export default {
       }
     },
     async editorArticle() {
-       this.postData.id= this.id;
+      if(this.is_draft){
+        this.postData.draft_id= this.draft_id;
+        this.postData.id= this.id;
+      }else{
+          this.postData.id= this.id;
+      }
       await this.$store.dispatch(
         "articleModule/editArcticleAct",
         this.postData
       );
       let data = this.$store.state.articleModule.arcticleEditor;
       if(data.code == 10000){
-        this.$message.success("修改成功返回到列表页面")
+        this.$message.success("修改,发布成功返回到列表页面")
         setTimeout(()=>{
            this.$router.push({
             path:"/article"
@@ -142,8 +202,31 @@ export default {
         title: data.info.title,
         picture: data.info.picture,
         content: data.info.content,
-        is_select: data.info.is_recommend
+        is_select: data.info.is_select
       };
+    },
+    async draftDetaile(){
+      await this.$store.dispatch("draftModule/getRafDetailfAct",  {draft_id: this.draft_id});
+      let data = this.$store.state.draftModule.getRafDetailData;
+       this.quillCont = data.info.content;
+        this.postData = {
+          author: data.info.author,
+          category: data.info.category,
+          title: data.info.title,
+          picture: data.info.picture,
+          content: data.info.content,
+          is_select: data.info.is_select
+        };
+    },
+    async addDraft(draftData){
+      await this.$store.dispatch("draftModule/addRafAct",draftData);
+      let data = this.$store.state.draftModule.addRaftData;
+      this.$message.success("添加草稿成功，请到草稿管理中查看")
+    },
+    async getSystemUserList(){
+      await this.$store.dispatch("userModule/getSystemUserAct",{})
+      let data = this.$store.state.userModule.getSystemUser;
+      this.authorOptions =  data.info;
     },
     avatarUpload() {
       document.querySelector("#uploader").click();
@@ -152,9 +235,33 @@ export default {
       this.postData.picture = url;
     },
     getcont(cont) {
+      this.cont = cont
       this.postData.content = cont;
     },
     articleSure() {
+      if(!this.postData.content){
+        this.$message.warning("请填写文章内容");
+        return;
+      }
+      if(!this.postData.picture){
+        this.$message.warning("请上传封面");
+        return;
+      }
+       if(!this.postData.title){
+        this.$message.warning("请填写文章标题");
+        return;
+      }
+      if(!this.postData.author){
+        this.$message.warning("请填选择作者");
+        return;
+      }
+       if(!this.postData.category){
+        this.$message.warning("请选择专栏");
+        return;
+      }
+
+
+
       if (this.id) {
         this.editorArticle();
       } else {
@@ -163,18 +270,83 @@ export default {
         }
         this.addArticle();
       }
+    },
+    previewClick(){
+      this.preview = true;
+      for(let i=0;i<this.options.length;i++){
+        if(this.options[i].id == this.postData.category){
+          this.categoryName = this.options[i].name
+          return
+        }
+      }
+    },
+    closeClick(){
+      this.preview = false;
+    },
+    handleScroll(){
+      let scrollObj = document.getElementById("searchBar"); // 滚动区域
+      let scrollTop = scrollObj.scrollTop; // div 到头部的距离
+      let dom = document.getElementsByClassName("ql-toolbar")[0];
+      let editorDom = document.getElementsByClassName("ql-editor")[0]
+      if(!dom || !editorDom){
+        return;
+      }
+      if(scrollTop>50){
+          dom.classList.add("ql-toolbar-fixed");
+          editorDom.classList.add("editorPaddind")
+      }
+      if(scrollTop==0){
+         dom.classList.remove("ql-toolbar-fixed");
+        editorDom.classList.remove("editorPaddind")
+      }
+    },
+    draftClick(){
+      if(this.$route.query.editor || this.$route.query.drift){
+        this.postData.subject_id = this.id;
+        this.postData.draft_id= this.draft_id
+      }
+      this.addDraft(this.postData)
     }
   },
   created() {
     this.cloumListFunc();
     this.id = this.$route.query.id;
-    // console.log(this.id);
-    if (this.id) {
-      this.detaclieArticle();
-      this.hasQuill = true;
+    let draft = this.$route.query.drift;
+    this.draft_id = this.$route.query.draft_id;
+    let editor= this.$route.query.editor;
+  
+      if(draft){
+        this.is_draft = true;
+        this.draftDetaile();
+        this.hasQuill = true;
+        this.tit='编辑草稿'
+      }
+      if(editor){
+         this.is_draft = false;
+        this.detaclieArticle();
+        this.hasQuill = true;
+        this.tit='编辑文章'
+      }
+    this.getSystemUserList();
+     
+  },
+  mounted() {
+    window.addEventListener('scroll', this.handleScroll,true)
+  },
+  destroyed () {//离开该页面需要移除这个监听的事件
+    window.removeEventListener('scroll', this.handleScroll)
+     
+  },
+  watch:{
+    cont(o,n){
+      if(o!=n){
+         let scrollObj = document.getElementById("searchBar"); // 滚动区域
+        let scrollTop = scrollObj.scrollTop; // div 到头部的距离
+        scrollObj.scrollTop = scrollObj.scrollHeight;
+      }
     }
   },
-  mounted() {},
+  
   fliters: {}
 };
 </script>
@@ -191,10 +363,16 @@ export default {
     left: 10px;
   }
   .article-cont {
-    padding: 20px;
-    border-radius: 8px;
-    background-color: #fff;
-    overflow: hidden;
+    // padding: 20px;
+    // border-radius: 8px;
+    // background-color: #fff;
+    // overflow: hidden;
+     @extend %extreme;
+    .mybtnstyle{
+      width:120px;
+      margin-top:30px;
+      margin-right: 20px;
+    }
     .avatar {
       .avatar-uploader {
       }
@@ -202,7 +380,148 @@ export default {
     .avatar-uploader {
       width: 300px;
     }
+    .ql-snow .ql-editor img{
+      max-width: 200px;
+    }
   }
+  .preview{
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+    overflow: auto;
+    margin: 0;
+    z-index: 2003;
+    background: rgba(0,0,0,.5);
+    .preview-warp{
+      width: 366px;
+      height: 668px;
+      // background-color: #ffff;
+      margin: 50px auto;
+      background-image: url('../../../assets/piverBack.png');
+      background-size: 100% 100%;
+      padding: 45px 24px 26px 24px;
+      box-sizing: border-box;
+      position: relative;
+       .close{
+          position:absolute;
+          width: 40px;
+          height: 40px;
+          font-size: 28px;
+          color: #fff;
+          z-index: 2;
+          top: -14px;
+          right: -15px;
+        }
+      .preview-cont{
+        position: relative;
+        // border:1px red solid;
+        width: 100%;
+        height: 100%;
+        border-bottom-right-radius: 24px;
+        border-bottom-left-radius: 24px;
+        // padding-bottom: 30px;
+        overflow-x: hidden;
+        overflow-y: auto;
+       
+        .preview-top-img{
+          height: 250px;
+          width: 100%;
+          position: relative;
+          img{
+            width: 100%;
+            height: 100%;
+            // border:1px red solid;
+          }
+          .preview-type{
+            position: absolute;
+            width:110px;
+            height:24px;
+            background:rgba(255,204,0,1);
+            opacity:0.5;
+            text-align: center;
+            color: #FFFFFF;
+            font-size: 12px;
+            bottom: 16px;
+            line-height: 24px;
+            left: 15px;
+            overflow: hidden;
+            white-space: nowrap;
+            text-overflow: ellipsis;
+          }
+        }
+        .preview-author{
+          height: 40px;
+          font-size: 12px;
+          margin-bottom: 15px;
+          margin-top: 15px;
+          .author-span{
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 40px;
+            overflow: hidden;
+            border:1px #dcdcdc solid;
+            float: left;
+            margin-right: 8px;
+          }
+          .guanzhu{
+            float: right;
+            // width: 44px;
+            height: 22px;
+            padding: 0 5px;
+            background-color: #FFCC00;
+            color: #1D1E2C;
+            line-height: 22px;
+            position: relative;
+            bottom: 10px;
+          }
+        }
+        .xian{
+          width:128px;
+          height:1px;
+          background-color: #dcdcdc;
+          position: relative;
+          left: 90px;
+           margin-top: 30px;
+          margin-bottom: 30px;
+        }
+        .preview-mind-cont{
+          padding:0 10px;
+          .title{
+            padding-top: 18px;
+            line-height: 1.8;
+            min-height: 28px;
+            color: #1D1E2C;
+            font-weight: 600;
+          }
+          .text{
+            margin-top: 30px;
+            font-size: 14px;
+            color:rgba(29,30,44,1);
+            line-height: 1.8;
+            letter-spacing: 1px;
+            margin-bottom: 30px;
+            padding: 0px;
+            img{
+              width: 100%;
+              height: 200px;
+              margin-top: 3px;
+              margin-bottom: 3px;
+              text-align: center;
+            }
+          }
+        }
+      }
+      .preview-cont::-webkit-scrollbar {
+          display: none;
+      }
+    }
+  }
+ 
 }
 </style>
 

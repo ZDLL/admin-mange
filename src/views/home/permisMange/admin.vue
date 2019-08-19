@@ -14,41 +14,42 @@
             <!-- <el-button type="text" @click="toEditorClick(scope.row)">编辑</el-button> -->
             <el-button type="text" @click="changePwdClick(scope.row)">修改密码</el-button>
             <el-button type="text" @click="toDeleteClick(scope.row)">删除</el-button>
+            <el-button type="text" @click="toEditorClick(scope.row)">编辑</el-button>
           </template>
         </el-table-column>
       </el-table>
         
     </div>
     <myPackge v-if='total' :key='total' :pageTotal='total' @handleCurrent='handleCurrentFunc'></myPackge>
-    <el-dialog title="新增管理员" :visible.sync="dialogAdmin" width="50%">
+    <el-dialog :title='typeTxt' :visible.sync="dialogAdmin" width="50%">
       <div class>
         <el-row>
-          <span>用 户 名 ：</span>
+          <span><span class='my-span-notice'>*</span>用 户 名 ：</span>
           <span class="input-span">
-            <el-input placeholder="请输入内容" v-model="postData.username" clearable></el-input>
+            <el-input placeholder="请输入用户名" v-model="postData.username" clearable></el-input>
+          </span>
+        </el-row>
+        <el-row v-show='type=="add"'>
+          <span><span class='my-span-notice'>*</span>登录密码：</span>
+          <span class="input-span">
+            <el-input placeholder="请输入密码" v-model="postData.password" show-password></el-input>
           </span>
         </el-row>
         <el-row>
-          <span>登录密码：</span>
+          <span><span class='my-span-notice'>*</span>真实姓名：</span>
           <span class="input-span">
-            <el-input placeholder="请输入内容" v-model="postData.password" clearable></el-input>
-          </span>
-        </el-row>
-        <el-row>
-          <span>真实姓名：</span>
-          <span class="input-span">
-            <el-input placeholder="请输入内容" v-model="postData.real_name" clearable></el-input>
+            <el-input placeholder="请输入真实姓名" v-model="postData.real_name" clearable></el-input>
           </span>
         </el-row>
 
         <el-row>
-          <span>手 机 号 ：</span>
+          <span><span class='my-span-notice'>*</span>手 机 号 ：</span>
           <span class="input-span">
-            <el-input placeholder="请输入内容" v-model="postData.phone" clearable></el-input>
+            <el-input placeholder="请输入手机号" type='number' v-model="postData.phone" clearable></el-input>
           </span>
         </el-row>
         <el-row>
-          <span>选择权限组：</span>
+          <span><span class='my-span-notice'>*</span>选择权限组：</span>
           <span class="input-span">
             <el-select v-model="postData.permission_group" placeholder="请选择">
             <el-option
@@ -71,7 +72,7 @@
       <div class>
         <el-row>
           <span class="input-span">
-            <el-input placeholder="请输入新密码" v-model="changePwdTxt" clearable></el-input>
+            <el-input placeholder="请输入新密码" v-model="changePwdTxt" show-password></el-input>
           </span>
         </el-row>
       </div>
@@ -86,6 +87,7 @@
 <script>
 import { truncate } from 'fs';
 import myPackge from '../../../components/package.vue';
+import until from '../../../comm/until.js';
 export default {
   name: "admin",
   data() {
@@ -94,6 +96,7 @@ export default {
       changePwd:false,
       changePwdTxt:"",
       adminId:"",
+      type:"add",
       postData: {
         username: "",
         password: "",
@@ -105,6 +108,7 @@ export default {
       role:"",
       total:0,
       tableHeadAdmin: [
+        { prop: "user_id", label: "管理员ID" },
         { prop: "create_time", label: "添加时间" },
         { prop: "username", label: "用户名" },
         { prop: "phone", label: "电话" },
@@ -150,7 +154,20 @@ export default {
       this.$message.success("删除该管理员成功");
       this.getAdminList({});
     },
-    
+    async getAdmindetail(postData){
+       await this.$store.dispatch("permisModule/adminGetdetailArt", postData);
+       let data = this.$store.state.permisModule.adminGetdetail;
+       this.postData = data.info;
+       this.dialogAdmin =true;
+    },
+    async editorAdmin(postData){
+       await this.$store.dispatch("permisModule/editoperatorArt", postData);
+       let data = this.$store.state.permisModule.editoperator;
+      //  this.postData = data.info;
+       this.$message.success("编辑权限成功")
+       this.dialogAdmin =false;
+       this.getAdminList();
+    },
     changePwdClick(row) {
       this.adminId =row.user_id;
       this.changePwd = true;
@@ -159,20 +176,65 @@ export default {
       this.editPasswor({user_id:this.adminId,password:this.changePwd})
     },
     toDeleteClick(row) {
-      this.delAdmin({user_id:row.user_id})
+        let _this = this;
+        until.myConfirm(_this, `是否删除该管理员？`,function(val){
+             _this.delAdmin({user_id:row.user_id})
+        })
+      // this.confirm("是否删除该管理员？",row.user_id)
+    },
+    toEditorClick(row){
+      this.type = 'editor'
+      this.adminId = row.user_id;
+      this.getAdmindetail({user_id:row.user_id});
     },
     addAdminClick() {
       this.adminId ="";
+      this.type= 'add'
+      this.postData= {
+        username: "",
+        password: "",
+        real_name: "",
+        phone: "",
+        permission_group: ""
+      };
       this.dialogAdmin = true;
     },
     addAdminBtn(){
+      if(!this.postData.username){
+        this.$message.warning("请填写用户名");
+        return;
+      }
+      if(!this.postData.password && this.type=='add'){
+        this.$message.warning("请填写登录密码");
+        return;
+      }
+      if(!this.postData.real_name){
+        this.$message.warning("请填写真实姓名");
+        return;
+      }
+      if(!this.postData.phone){
+        this.$message.warning("请填写手机号");
+        return;
+      }
+      if(!this.postData.permission_group){
+        this.$message.warning("请选择权限组");
+        return;
+      }
       if(!this.adminId){
         this.setAddAdmin(this.postData)
+      }else{
+        this.user_id = this.adminId;
+        this.editorAdmin(this.postData)
       }
       
     },
     handleCurrentFunc(val){
          this.getAdminList({current_page:val,page_size:10});
+    }
+  },
+  computed:{
+    typeTxt:function(){
+      return this.type == "add"?"新增管理员":"编辑管理员"
     }
   },
   created(){

@@ -10,8 +10,10 @@ import userModule from './module/userModule.js'
 import tagModule from './module/tagModule.js'
 import permisModule from './module/permisModule.js'
 import bannerModule from './module/bannerModule.js'
+import draftModule from './module/draftModule.js'
+import opinionModule from './module/opinionModule.js'
+import msgModule from './module/msgModule.js'
 Vue.use(Vuex)
-
 export default new Vuex.Store({
   modules: {
     comModule,
@@ -23,6 +25,9 @@ export default new Vuex.Store({
     userModule,
     tagModule,
     permisModule,
-    bannerModule
+    bannerModule,
+    draftModule,
+    opinionModule,
+    msgModule
   }
 })

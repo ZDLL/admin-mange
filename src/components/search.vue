@@ -1,6 +1,6 @@
 <template>
     <div class="search-com">
-        <input type="text" v-model="txt" :placeholder='holderTxt'/>
+        <input type="text"  v-model="txt" :placeholder='holderTxt' @keyup.enter='searchBtn'/>
         <i class="el-input__icon el-icon-search" @click="searchBtn"></i>
     </div>
 </template>

@@ -38,13 +38,16 @@ export default {
             }
             // console.log(`登录时获取的token=====：`+token)
             until.setStore('token',token)
+            until.setStore('name',this.name)
             _this.$router.push("/home");
         }
     },
     created(){
         
     },
-    mounted(){},
+    mounted(){
+      localStorage.clear();
+    },
     filters:{}
 }
 </script>

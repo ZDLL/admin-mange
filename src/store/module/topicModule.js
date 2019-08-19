@@ -9,7 +9,8 @@ const state = {
  topicEditData:{},
  changeTopicData:{},
  topicDelData:{},
- topipcMomtListData:{}
+ topipcMomtListData:{},
+ topicRecData:{}
 }
 
 // getters
@@ -38,6 +39,9 @@ const actions = {//异步
   },
   async topicMomtList(context,param){
     context.commit("topipcMomtList",await until.getData(apiUrl.gettopicmoments,qs.stringify(param)))
+  },
+  async topicRecAct(context,param){
+      context.commit("topicRecMut",await until.getData(apiUrl.topicRec,qs.stringify(param)))
   }
 }
 // mutations
@@ -62,6 +66,9 @@ const mutations = {//同步
     },
     topipcMomtList(state,data){
         state.topipcMomtListData = data.data
+    },
+    topicRecMut(state,data){
+        state.topicRecData = data.data
     }
 }
 

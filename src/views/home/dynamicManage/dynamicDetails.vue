@@ -10,11 +10,11 @@
                 <img v-if='detail.info.head_portrait' :src ='detail.info.head_portrait' alt="头像" />
               </span>
               <div class="dynaContP">
-                <span>{{detail.info.nickname||"--"}}</span>
+                <span>用户名：{{detail.info.nickname||"--"}}</span>
                 <!-- <el-tag size="small">标签一</el-tag> -->
                 <p>
                   是否推荐：
-                  <span class="color33"> {{detail.info.is_recommend | fileterIsRecommend}}</span>
+                  <span class="color33"> {{detail.info.is_recommend | fileterYesOrNo}}</span>
                 </p>
               </div>
             
@@ -44,8 +44,8 @@
           </el-col>
           <el-col :span="2">
             <div style="text-align: center;margin-top: 10px;">
-              <!-- <el-button type="primary" size="small" plain @click="recommendBtn">推荐</el-button> -->
-              <el-button style="margin-left:0px;margin-top:10px;" plain size="small" @click="deleteBtn">删除</el-button>
+              <el-button type="primary" size="small" plain @click="recommendBtn">{{recOrNo}}</el-button>
+              <el-button style="margin-left:0px;margin-top:10px;" plain size="small" @click="deleteBtn">删除动态</el-button>
             </div>
           </el-col>
         </el-row>
@@ -65,11 +65,18 @@
           <ul>
             <li class="imgList-li" v-for="(itm,index) in detail.info.picture" :key="index">
               <span class="viewerImg">
-                <img :src="itm.url" />
+                <img style="object-fit: contain;" :src="itm.url" />
+                <!-- <el-image
+                  :src="itm.url"
+                  fit="contain">
+                </el-image> -->
               </span>
-              <span class="tag-span" v-for='(itmc,idx) in itm.label' :key='idx'>
-                <el-tag size="small">{{itmc.content}}</el-tag>
-              </span>
+              <div class='viewerRight'>
+                <span class="tag-span" v-for='(itmc,idx) in itm.label' :key='idx'>
+                  <el-tag class='tag-span-tag' size="small">{{itmc.content}}</el-tag>
+                </span>
+              </div>
+              
             </li>
           </ul>
         </viewer>
@@ -80,6 +87,7 @@
 <script>
 import place from "../../../components/place.vue";
 import { setTimeout } from 'timers';
+import until from '../../../comm/until.js';
 export default {
   name: "dynamicdetails",
   data() {
@@ -90,6 +98,11 @@ export default {
   },
   components: {
     "my-place": place
+  },
+  computed:{
+    recOrNo(){
+      return this.detail.info.is_recommend ==1?"取消推荐":"设置推荐"
+    }
   },
   methods: {
     async getDetails(){
@@ -106,9 +119,11 @@ export default {
       let data = this.$store.state.dynamicModule.momentRecommend;
       if(data.code !=10000){
         this.$message.error(data.msg);
-        this.getDetails();
+        
         return
       }
+       this.$message.success("操作成功");
+       this.getDetails();
       // this.detail.info.is_recommend= data.info.is_recommend
       // this.$message.success("推荐至首页成功")
       // setTimeout(()=>{
@@ -120,10 +135,6 @@ export default {
     async isDelMoment(){
       this.$store.dispatch("dynamicModule/delmoment",{id:this.id});
       let data = this.$store.state.dynamicModule.delmoment;
-      if(data!=10000){
-        this.$message.error(data.msg);
-        return
-      }
       this.$message.success("删除成功，一秒后到动态列表");
       setTimeout(()=>{
         this.$router.push({
@@ -133,10 +144,18 @@ export default {
      
     },
     recommendBtn(){
-      this.recommend()
+       let _this = this;
+        until.myConfirm(_this, `是否推荐该动态？`,function(val){
+             _this.recommend()
+        })
     },
     deleteBtn(){
-      this.isDelMoment()
+      // this.isDelMoment()
+       let _this = this;
+        until.myConfirm(_this, `是否删除该动态？`,function(val){
+             _this.isDelMoment()
+        })
+      // this.confirm("是否删除该动态？")
     }
   },
   created() {
@@ -156,11 +175,12 @@ export default {
     color: #333;
   }
   .dynaCont {
-    padding: 20px;
-    border-radius: 8px;
-    overflow: hidden;
-    background-color: #fff;
-    margin-top: 30px;
+    // padding: 20px;
+    // border-radius: 8px;
+    // overflow: hidden;
+    // background-color: #fff;
+    // margin-top: 30px;
+    @extend %extreme;
     .dynaPhoto {
       display: inline-block;
       vertical-align: top;
@@ -206,39 +226,46 @@ export default {
     }
   }
   .imgGather {
-    padding: 20px;
-    border-radius: 8px;
-    overflow: hidden;
-    background-color: #fff;
-    margin-top: 25px;
+     @extend %extreme;
     .imgLists {
       margin-top: 20px;
     }
     .imgList-li {
       display: inline-block;
       vertical-align: top;
-      width: 310px;
+      width: 320px;
       margin-right: 2%;
       box-sizing: border-box;
-      max-height: 144px;
-      padding: 10px;
+      padding: 15px;
+      height: 200px;
       .el-tag {
         margin: 5px;
       }
     }
     .tag-span {
       display: inline-block;
-      width: 130px;
+     
+      .tag-span-tag{
+        max-width: 90px;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+      }
+    }
+    .viewerRight{
+      display: inline-block;
+      width: 100px;
+      margin-left: 5px;
     }
     .viewerImg {
-      width: 120px;
-      height: 120px;
+      width: 180px;
+      height: 180px;
       display: inline-block;
       vertical-align: top;
-      border: 1px #dcdcdc solid;
+      border: 1px #F3F3F3 dashed;
+      background: #f5f5f5;
       border-radius: 4px;
       overflow: hidden;
-
       img {
         width: 100%;
         height: 100%;

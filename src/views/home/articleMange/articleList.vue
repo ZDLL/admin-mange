@@ -3,24 +3,24 @@
     <my-place :place-text="tit"></my-place>
     <div class="articleList-top">
       <el-row>
-        <el-col :span="8">
+        <el-col :span="10">
           <div class="data-box">
             <span>总共文章数</span>
-            <strong>{{num.total_history || "查询中..."}}</strong>
+            <strong>{{num.total_history || "..."}}</strong>
           </div>
         </el-col>
-        <el-col :span="8">
+        <el-col :span="10">
           <div class="data-box">
             <span>今日文章数</span>
-            <strong>{{num.total_today || "查询中..."}}</strong>
+            <strong>{{num.total_today || "..."}}</strong>
           </div>
         </el-col>
-        <el-col :span="8">
+        <!-- <el-col :span="8">
           <div class="data-box">
             <span>待审核文章数</span>
             <strong>......</strong>
           </div>
-        </el-col>
+        </el-col> -->
       </el-row>
     </div>
     <div class="articleList-cont">
@@ -31,6 +31,7 @@
           <el-button type="primary" plain size="medium">图片</el-button>
         </el-button-group> -->
         <search :holderTxt='holder' @searchVal='searchFun'></search>
+        <MyDatePicker @datePicker='datePickerFun'></MyDatePicker>
         <el-button-group style="float:right">
           <el-button type="primary" size="medium" @click="addArticle">发布文章</el-button>
         </el-button-group>
@@ -39,8 +40,9 @@
         <el-table :data="tableData" border style="width: 100%">
           <el-table-column label="封面">
             <template slot-scope="scope">
-              <!-- <img v-if='scope.row.picture' :src='scope.row.picture' alt="封面"/> -->
-              <el-image v-if="scope.row.picture" :src="scope.row.picture" lazy></el-image>
+              <img v-if='scope.row.picture' :src='scope.row.picture' alt="封面图"/>
+              <span v-else>无图片</span>
+              <!-- <el-image  v-if="scope.row.picture" :src='scope.row.picture' lazy></el-image> -->
             </template>
           </el-table-column>
           <el-table-column
@@ -71,16 +73,69 @@
 
           <el-table-column fixed="right" label="操作" width="240">
             <template slot-scope="scope">
-              <el-button type="text" @click="articEditor(scope.row)">编辑</el-button>
-              <el-button type="text" @click="delArticBtn(scope.row) ">删除</el-button>
               <el-button type="text" @click="setSelectBtn(scope.row)">{{scope.row.is_select |select}}</el-button>
               <el-button type="text" @click="setIscoverBtn(scope.row)">{{scope.row.is_recommend |iscover }}</el-button>
+              <br/>
+              <el-button type="text" @click="articEditor(scope.row)">编辑</el-button>
+              <el-button type="text" @click="delArticBtn(scope.row) ">删除</el-button>
+              <el-button type="text" @click="pushArtic(scope.row)">文章推送</el-button>
             </template>
           </el-table-column>
         </el-table>
       </div>
       <MyPackage v-if='packTotal' :key='packTotal' :pageTotal='packTotal' @handleCurrent="handleCurrentFunc"></MyPackage>
     </div>
+
+    <!-- 推送时间 -->
+    <el-dialog
+      title="设置推送时间"
+      :visible.sync="timeDialog"
+      width="50%">
+        <el-row style="margin-bottom:20px">
+            <el-col :span="4"><span class='my-span-notice'>*</span>推送时间：</el-col>
+            <el-col :span="12">
+              <el-date-picker
+                v-model="pushMsgData.push_time"
+                type="datetime"
+                placeholder="选择日期时间"
+                value-format="yyyy-MM-dd HH:mm:ss"
+                @change='timeChange'
+                >
+            </el-date-picker>
+            </el-col>
+        </el-row>
+
+        <el-row style="margin-bottom:20px">
+            <el-col :span="4"><span class='my-span-notice'>*</span>推送标题：</el-col>
+            <el-col :span="12">
+                <el-input
+                type="text"
+                placeholder="请输入内容"
+                v-model="pushMsgData.title"
+                maxlength="30"
+                show-word-limit
+                >
+                </el-input>
+            </el-col>
+        </el-row>
+        <el-row style="margin-bottom:20px">
+            <el-col :span="4"><span class='my-span-notice'>*</span>推送简介：</el-col>
+            <el-col :span="12">
+                <el-input
+                type="text"
+                placeholder="请输入内容"
+                v-model="pushMsgData.content"
+                maxlength="100"
+                show-word-limit
+                >
+                </el-input>
+            </el-col>
+        </el-row>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="timeDialog = false">取 消</el-button>
+        <el-button type="primary" @click="pushTimeClick">确 定</el-button>
+      </span>
+    </el-dialog>
   </div>
 </template>
 <script>
@@ -88,6 +143,7 @@ import place from "../../../components/place.vue";
 import search from "../../../components/search.vue";
 import MyPackage from "../../../components/package.vue";
 import MyDatePicker from "../../../components/datepicker.vue";
+import until from '../../../comm/until.js'
 export default {
   name: "articlelist",
   data() {
@@ -95,7 +151,7 @@ export default {
       tit: "文章管理",
       holder:"输入标题",
       tableHead: [
-        // { prop: "picture", label: "封面" },
+        { prop: "id", label: "文章ID" },
         { prop: "title", label: "标题" },
         { prop: "nickname", label: "作者" },
         { prop: "category", label: "所属专栏" },
@@ -112,7 +168,16 @@ export default {
         current_page: 1
       },
       num:{},
-      packTotal:0
+      packTotal:0,
+      timeDialog:false,
+      pushTime:"",
+      pushMsgData:{
+        push_time:"",
+        title:"",
+        content:"",
+        type:'1'
+      },
+      articDetail:{}
     };
   },
   computed:{
@@ -158,6 +223,13 @@ export default {
         this.$message.success("删除成功");
         this.getArticList();
     },
+    async pushMsg(prameData){
+       await this.$store.dispatch("msgModule/artMesgPushArt",prameData);
+        let data = this.$store.state.msgModule.artMesgPushData;
+        this.$message.success("文章推送成功");
+        this.timeDialog = false
+        this.getArticList()
+    },
     articEditor(row) {
       this.$router.push({
         path: "/addarticle",
@@ -173,7 +245,6 @@ export default {
       });
     },
     handleCurrentFunc(val) {
-      this.postData = {};
       this.postData.current_page = val;
       this.postData.page_size = 10;
       this.getArticList()
@@ -182,16 +253,28 @@ export default {
       let postData = {
         id: row.id
       };
-      this.setSelect(postData);
+      let _this = this;
+      until.myConfirm(_this, `是否确认进行投放精选的操作？`,function(val){
+         _this.setSelect(postData);
+      })
+     
     },
     setIscoverBtn(row) {
       let postData = {
         id: row.id
       };
-      this.setIscover(postData);
+      let _this = this;
+      until.myConfirm(_this, `是否确认进行投放发现的操作？`,function(val){
+          _this.setIscover(postData);
+      })
+     
     },
     delArticBtn(row){
-        this.delArticle({id:row.id})
+       let _this = this;
+      until.myConfirm(_this, `是否删除该文章？`,function(val){
+          _this.delArticle({id:row.id})
+      })
+        // this.confirm("是否删除该文章？",row.id)
     },
     searchFun(val){
          this.postData={};
@@ -203,6 +286,41 @@ export default {
             current_page: 1
          }
          this.getArticList(this.postData)
+    },
+    datePickerFun(time){
+      this.postData ={}
+      this.postData.start_time =time?time[0]:'';
+      this.postData.end_time = time?time[1]:'';
+      this.postData.page_size='10';
+      this.postData.current_page=1;
+      this.getArticList(this.postData)
+      // this.getlist()
+    },
+    pushArtic(row){
+      this.timeDialog=true;
+      this.articDetail = row;
+    },
+    timeChange(val){
+      // console.log(val)
+    },
+    pushTimeClick(){
+      this.pushMsgData.id= this.articDetail.id;
+      let _this = this;
+      if(!this.pushMsgData.push_time){
+        this.$message.warning("请选择推送时间");
+        return;
+      }
+       if(!this.pushMsgData.title){
+           this.$message.warning("请填写推送标题");
+          return;
+      }
+       if(!this.pushMsgData.content){
+          this.$message.warning("请填写推送简介");
+          return;
+      }
+      until.myConfirm(_this,"是否进行文章定时推送操作？推送后将不能被撤回",function(val){
+           _this.pushMsg(_this.pushMsgData)
+      })
     }
   },
   created() {
@@ -234,21 +352,25 @@ export default {
 .articleList-page {
   .articleList-top,
   .articleList-cont {
-    padding: 20px;
-    border-radius: 8px;
-    overflow: hidden;
-    background-color: #fff;
+    // padding: 20px;
+    // border-radius: 8px;
+    // overflow: hidden;
+    // background-color: #fff;
+     @extend %extreme;
+
   }
    .articleList-top{
       padding: 3% 10px;
    }
   .articleList-cont {
-    margin-top: 20px;
+    // margin-top: 20px;
+    .filtrate{
+      .time{
+        margin-top: 0px;
+      }
+    }
     .article-table {
-      border: 1px solid #ebeef5;
-      border-radius: 8px;
-      overflow: hidden;
-      margin-top: 20px;
+      @extend %tableborder;
       .el-table__row {
         img {
           max-width: 80px;

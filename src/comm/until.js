@@ -80,7 +80,7 @@ let getUrlParams = function(name) {
   return null;
 }
 import axios from "axios"
-import { Message } from "element-ui";
+import { Message,confirm,Loading} from "element-ui";
 /*
   参数为fromdata型的axios封装
 */
@@ -112,9 +112,46 @@ let axiosFromData = function (obj){
 /**
  * axios的post请求
  */
+let loading
 
-// axios.defaults.headers.common["token"] = token || "a70bc1c23ce5a972637adba5954a5acc_api";
+function startLoading() {    //使用Element loading-start 方法
+  loading = Loading.service({
+      target:document.querySelector("#searchBar"),
+      lock: true,
+      text: '加载中……',
+      background: 'rgba(255, 255, 255, 0.7)'
+  })
+}
+function endLoading() {    //使用Element loading-close 方法
+  loading.close()
+}
+
+let needLoadingRequestCount = 0
+function showFullScreenLoading() {
+    if (needLoadingRequestCount === 0) {
+        startLoading()
+    }
+    needLoadingRequestCount++
+}
+
+function tryHideFullScreenLoading() {
+    if (needLoadingRequestCount <= 0) return
+    needLoadingRequestCount--
+    if (needLoadingRequestCount === 0) {
+        endLoading()
+    }
+}
 let getData = function(url,payload){
+  axios.interceptors.request.use((config)=>{
+      // 在发送请求之前做些什么
+      showFullScreenLoading();
+      return config;
+  }, function (error) {
+      // 对请求错误做些什么
+      Message.error("请求错误");
+      return
+  });
+
   return new Promise((res,rej)=>{
     axios({
       method: 'post',
@@ -122,21 +159,41 @@ let getData = function(url,payload){
       data:payload,
       headers: {"token":window.localStorage.getItem("token")},
     }).then(data=>{
+        endLoading()
       if(data.data.code !=10000){
         Message.error(data.data.msg);
+        if(data.data.code =='10005' || data.data.code=='10006'){
+          window.location.href='/'
+          return;
+        }
         return;
       }
        res(data)
     }).catch(err=>{
-       rej(err)
+      endLoading()
+      rej(err)
     })
-  //  axios.post(url,payload).then(data=>{
-  //      res(data)
-  //   }).catch(err=>{
-  //      rej(err)
-  //   })
  })
 };
+
+
+//公共的弹层提示
+let  myConfirm = function(_this,txt,fn) {
+  _this.$confirm(txt, "提示", {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+      type: "warning"
+  })
+  .then((val) => {
+      fn(val)
+  })
+  .catch(() => {
+    _this.$message({
+      type: "info",
+      message: "已取消操作"
+  });
+  });
+}
 
 export default {
   getAES,
@@ -146,5 +203,6 @@ export default {
   removeStore,
   getUrlParams,
   axiosFromData,
-  getData
+  getData,
+  myConfirm
 }

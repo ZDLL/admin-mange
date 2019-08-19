@@ -15,9 +15,7 @@
 </template>
 <script>
 import { quillEditor } from "vue-quill-editor";
-import "quill/dist/quill.core.css";
-import "quill/dist/quill.snow.css";
-import "quill/dist/quill.bubble.css";
+
 const toolbarOptions = [
   ["bold", "italic", "underline", "strike"], // 加粗 斜体 下划线 删除线
   ["blockquote", "code-block"], // 引用  代码块
@@ -85,12 +83,32 @@ export default {
     }
   },
   mounted() {
+    // console.log("mmmmmm")
     // console.log(this.parentEditorCont);
   }
 };
 </script>
 <style lang="scss">
+
 .my-quill-editor {
+
+  position: relative;
+  .editor{
+    // width: 850px;
+    .ql-toolbar{
+      z-index: 200;
+    }
+  }
+  .ql-toolbar-fixed{
+    position: fixed;
+    left: 240px;
+    top:60px;
+    background-color: #fff;
+    width: calc(100% - 298px);
+  }
+  .editorPaddind{
+    padding-top: 50px;
+  }
   .ql-container .ql-snow {
     min-height: 200px;
   }

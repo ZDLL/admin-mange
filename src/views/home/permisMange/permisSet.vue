@@ -46,6 +46,7 @@
 </template>
 <script>
 import { constants } from "crypto";
+import until from '../../../comm/until.js';
 export default {
   name: "permis",
   data() {
@@ -54,7 +55,7 @@ export default {
       name: "",
       tableHeadRole: [
         { prop: "group_name", label: "权限名" },
-        { prop: "id", label: "权限Id" }
+        { prop: "id", label: "权限ID" }
       ],
       tableData: [],
       searchData: {},
@@ -119,7 +120,12 @@ export default {
       this.roleId =''
     },
     toDeleteClick(row) {
-        this.delGroup(row.id)
+      let _this = this;
+        until.myConfirm(_this, `是否删除该权限组？`,function(val){
+           _this.delGroup(row.id)
+        })
+      // this.confirm("是否删除该权限组？",row.id)
+       
     },
     handleCheckAllChange(val) {
       if (val) {

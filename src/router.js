@@ -45,8 +45,8 @@ export default new Router({
         name:"dynamicManage",
         component:()=>import('./views/home/dynamicManage/dynamicList.vue'),
       },{
-        path:"/dynamidetail",//动态详情
-        name:"dynamidetails",
+        path:"/dynamicdetail",//动态详情
+        name:"dynamicdetails",
         component:()=>import('./views/home/dynamicManage/dynamicDetails.vue'),
       },{
         path:'/column',//专栏管理
@@ -73,6 +73,10 @@ export default new Router({
         name:"addarticle",
         component:()=>import('./views/home/articleMange/articleAdd.vue'),
       },{
+        path:"/draft",//草稿箱
+        name:"draft",
+        component:()=>import('./views/home/draftMange/draftList.vue'),
+      },{
         path:"/bestUser",//推荐用户
         name:"bestUser",
         component:()=>import('./views/home/bestUser/bestUserList.vue'),
@@ -88,7 +92,23 @@ export default new Router({
         path:"/addbanner",
         name:"addbanner",
         component:()=>import('./views/home/bannerMange/bannerAdd.vue')
-      }]
+      },
+      {
+        path:"/opinion",
+        name:"opinion",
+        component:()=>import('./views/home/opinionMange/opinionList.vue')
+      },
+      {
+        path:"/message",
+        name:"message",
+        component:()=>import('./views/home/messageMange/messageList.vue')
+      },
+      {
+        path:"/addmessage",
+        name:"addmessage",
+        component:()=>import('./views/home/messageMange/messageAdd.vue')
+      },
+    ]
     }
   ]
 })

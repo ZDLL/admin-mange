@@ -22,8 +22,10 @@
       <el-divider content-position="left">用户列表</el-divider>
       <!-- <el-button type="primary" plain @click="viewBastUser">查看推荐用户</el-button> -->
       <el-button-group>
+        <el-button type="primary" plain @click="viewBastUser(2)">全部</el-button>
         <el-button type="primary" plain @click="viewBastUser(1)">推荐用户</el-button>
-        <el-button type="primary" plain @click="viewBastUser(2)">查看全部</el-button>
+        <el-button type="primary" plain @click="viewBastUser(3)">官方账号</el-button>
+       
       </el-button-group>
        <mySearch style="margin-left:20px" :holder-txt='placehover' @searchVal='getSearchVal'/>
       <div class="userlist-table">
@@ -40,9 +42,19 @@
               {{scope.row.is_recommend | fileterYesOrNo}}
             </template>
           </el-table-column>
+            <el-table-column  label="推荐顺序">
+            <template slot-scope="scope">
+              {{ scope.row.is_recommend ==1?scope.row.sort_recommend :'未推荐'}}
+            </template>
+          </el-table-column>
           <el-table-column  label="是否禁言">
             <template slot-scope="scope">
                 {{scope.row.is_forbidden | fileterYesOrNo}}
+            </template>
+          </el-table-column>
+           <el-table-column  label="官方账号">
+            <template slot-scope="scope">
+                {{scope.row.is_system | fileterYesOrNo}}
             </template>
           </el-table-column>
           <el-table-column fixed="right" label="操作" width="240">
@@ -87,6 +99,7 @@
         </el-form-item>
         <el-form-item v-show='radio==1' label="设置推荐顺序">
             <el-input v-model='recSort' type="number" placeholder="设置推荐顺序"></el-input>
+            <p style="color:#999;font-size:12px">注：请输入1以上的数字，数字越小，越靠前</p>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -101,6 +114,7 @@ import place from "../../../components/place.vue";
 import mySearch from "../../../components/search.vue";
 import myPackge from '../../../components/package.vue';
 import { constants } from 'crypto';
+import until from '../../../comm/until.js';
 import { open } from 'fs';
 export default {
   name: "userlist",
@@ -114,7 +128,7 @@ export default {
       radio:"2",
       cerOptions:[],
       select:"",
-      placehover:"用户名",
+      placehover:"用户昵称",
       seachData:{
         page_size:10,
         current_page:1,
@@ -124,9 +138,9 @@ export default {
       },
       recSort:1,
       tableHead: [
-        { prop: "nickname", label: "昵称" },
         { prop: "user_id", label: "用户ID" },
-        { prop: "birthday", label: "生日" },
+        { prop: "nickname", label: "昵称" },
+        { prop: "create_time", label: "创建时间" },
         { prop: "publish_moments", label: "动态" },
         { prop: "cert", label: "角色标签" },
         // { prop: "is_recommend", label: "是否推荐" },
@@ -157,7 +171,7 @@ export default {
       }else{
          this.$message.success("解封成功");
       }
-      this.getUserList({});
+      this.getUserList(this.seachData);
     },
     async setRecommendUser(obj){
       await this.$store.dispatch("userModule/setRecommendUserAct",obj);
@@ -168,7 +182,7 @@ export default {
         this.$message.success("取消推荐成功")
       }
       this.recDialog = false;
-      this.getUserList({});
+      this.getUserList(this.seachData)
     },
     async getUserCertList(){
       await this.$store.dispatch("userModule/getUserCertListAct",{});
@@ -179,48 +193,37 @@ export default {
       await this.$store.dispatch("userModule/setAddCerttoUserAct",{user_id:obj.user_id,cert:obj.cert})
       let data = this.$store.state.userModule.addCerttoUser;
       this.$message.success("设置用户标签成功");
-      this.getUserList({});
+      this.getUserList(this.seachData);
       this.dialogFormVisible = false;
      
-    },
-    confirm(txt,type) {//type 1删除 2 禁言
-      this.$confirm(txt, "提示", {
-        confirmButtonText: "确定",
-        cancelButtonText: "取消",
-        type: "warning"
-      })
-        .then(() => {
-          if(type ==1){
-
-          }else if(type == 2){
-            this.setForbidden();
-          }
-        })
-        .catch(() => {
-          this.$message({
-            type: "info",
-            message: "已取消删除"
-          });
-        });
     },
     toFreezeClick(row) {
       this.user_id = row.user_id;
       let txt=''
       if(row.is_forbidden == 1){
-         txt='是否讲此用户解封'
-        
+         txt='是否将此用户解封'
       }else {
-        txt = "是否要将此用户冻结?冻结后用户讲不可评论，发帖。"
+        txt = "是否要将此用户冻结?冻结后用户将不可评论，发帖。"
       }
-      this.confirm(txt, "2");
+      // this.confirm(txt, "2");
+      let _this = this;
+      until.myConfirm(_this,txt ,function(val){
+          // _this.isDelMoment({id:row.id});
+           _this.setForbidden();
+      })
+
     },
     toEditorClick(row) {
       this.user_id = row.user_id;
+      // this.select = row.cert;
       this.dialogFormVisible = true;
     },
     recommendClick(row) {
       this.user_id = row.user_id;
       this.recDialog = true;
+      this.radio = row.is_recommend;
+      this.recSort = row.is_recommend ==1?row.sort_recommend :""
+
     },
     cerBtn(){
       this.setAddCerttoUser({user_id:this.user_id,cert:this.select})
@@ -242,15 +245,21 @@ export default {
       });
     },
     viewBastUser(type){
-     
+      this.seachData.nickname ='';
+      this.seachData={};
+      this.seachData.current_page=1;
       if(type ==1){
          this.seachData.is_recommend =1;
-      }else{
-        this.seachData.is_recommend =2;
+      }else if(type ==2){
+        this.seachData.is_system="";
+        this.seachData.is_recommend ="";
+      }else if(type ==3){
+        this.seachData.is_system =1;
       }
       this.getUserList(this.seachData);
     },
     getSearchVal(val){
+      this.seachData.nickname =val
       let serchData={
         nickname:val,
         current_page:1,
@@ -259,11 +268,12 @@ export default {
       this.getUserList(serchData)
     },
     handleCurrentFunc(val){
-      let packageData={
-         page_size:10,
-         current_page:val,
-      }
-        this.getUserList(packageData)
+      this.seachData.current_page = val
+      // let packageData={
+      //    page_size:10,
+      //    current_page:val,
+      // }
+      this.getUserList(this.seachData)
     }
   },
   created() {
@@ -294,14 +304,24 @@ export default {
 </script>
 <style lang="scss">
 // @import '@/style/topbox.scss';
+.userList-page-top,
+.userlist-box{
+   @extend %extreme;
+   .el-button-group>.el-button:not(:last-child){
+          margin-right: 0px;
+    }
+  .el-button-group .el-button--primary:first-child{
+    border-right-color: #b3d8ff;
+  }
+}
 .top-box {
   // width: 300px;
-  overflow: hidden;
-  background: #fff;
+  // overflow: hidden;
+  // background: #fff;
   text-align: center;
   padding: 3% 10px;
-  border-radius: 8px;
-  overflow: hidden;
+  // border-radius: 8px;
+  // overflow: hidden;
 
   h2 {
     color: #666;
@@ -322,17 +342,18 @@ export default {
     color: #333;
   }
 }
-.userlist-box {
-  background-color: #fff;
-  margin-top: 20px;
-  padding: 20px;
-}
+// .userlist-box {
+//   background-color: #fff;
+//   margin-top: 20px;
+//   padding: 20px;
+// }
 .userlist-table {
-  border-top: 1px solid #ebeef5;
-  border-left: 1px solid #ebeef5;
-  border-radius: 8px;
-  overflow: hidden;
-  margin-top: 20px;
+  // border-top: 1px solid #ebeef5;
+  // border-left: 1px solid #ebeef5;
+  // border-radius: 8px;
+  // overflow: hidden;
+  // margin-top: 20px;
+   @extend %tableborder;
 }
 </style>
 

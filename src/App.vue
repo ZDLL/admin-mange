@@ -1,8 +1,13 @@
 <template>
   <div id="app">
-    <router-view />
+      <router-view />
   </div>
 </template>
+<script>
+export default {
+  
+}
+</script>
 
 <style lang="scss">
 @import "./style/common.scss";
@@ -36,6 +41,16 @@
   }
   .el-button-group .el-button--primary:last-child{
     border-left-color:#b3d8ff;
+  }
+  .el-divider--horizontal{
+    margin-bottom: 35px;
+    margin-top: 25px;
+  }
+  .my-span-notice{
+    color: red;
+    margin-right: 5px;
+    position: relative;
+    top: 2px;
   }
 }
 </style>

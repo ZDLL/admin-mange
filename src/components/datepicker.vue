@@ -1,12 +1,11 @@
 <template>
-    <div class="time" style="margin-top:12px;">
+    <div class="time">
         <el-date-picker
             v-model="time"
             type="datetimerange"
             range-separator="至"
             start-placeholder="开始日期"
             end-placeholder="结束日期"
-            format="yyyy 年 MM 月 dd 日"
             value-format="yyyy-MM-dd"
             @change='timeChange'
             >

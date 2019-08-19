@@ -45,13 +45,15 @@
       
       <div class='columList-table'>
           <el-table :data="tableData" border style="width: 100%">
-            <el-table-column label="时间" property="create_time">
-            </el-table-column> 
-            <el-table-column label="标题" property="name">
-            </el-table-column>  
+            <el-table-column label="专栏ID" property="id"></el-table-column> 
+             <el-table-column label="专栏顺序" property="sort"></el-table-column> 
+            <el-table-column label="时间" property="create_time"></el-table-column> 
+            <el-table-column label="标题" property="name"></el-table-column>  
             <el-table-column label="背景图片">
                 <template slot-scope="scope">
-                   <el-image v-if='scope.row.picture' :src='scope.row.picture' lazy></el-image>
+                  <img v-if='scope.row.picture' :src='scope.row.picture' alt="背景图片"/>
+                   <!-- <el-image v-if='scope.row.picture' :src='scope.row.picture' lazy></el-image> -->
+                   <span v-else>无图片</span>
                     <!-- <img v-if='scope.row.picture' :src='scope.row.picture'/> -->
                 </template>
             </el-table-column>  
@@ -75,7 +77,7 @@
     <el-dialog :title='title'  width="50%" :visible.sync="dialogFormVisible">
         <div>
             <el-row class='mt20'>
-                <el-col :span="4">专栏背景图:</el-col>
+                <el-col :span="4"><span class='my-span-notice'>*</span>专栏背景图:</el-col>
                 <el-col :span="12">   
                     <span class="avatar-uploader" @click="uploadBtn">
                         <i class="el-icon-plus avatar-uploader-icon"></i>
@@ -88,46 +90,65 @@
                 </el-col>
             </el-row>
             <el-row class='mt20'>
-                <el-col :span="4">专栏标题:</el-col>
+                <el-col :span="4"><span class='my-span-notice'>*</span>专栏标题:</el-col>
                 <el-col :span="12">   
                     <el-input
                     placeholder="请输入内容"
                     v-model="cloumData.name"
+                    show-word-limit 
+                    maxlength="10"
                     clearable>
                 </el-input>
                 </el-col>
             </el-row>
             <el-row class='mt20'>
-                <el-col :span="4">英文标题:</el-col>
+                <el-col :span="4"><span class='my-span-notice'>*</span>英文标题:</el-col>
                 <el-col :span="12">   
                     <el-input
                     placeholder="请输入内容"
                     v-model="cloumData.en_name"
+                    show-word-limit 
+                    maxlength="30"
                     clearable>
                 </el-input>
                 </el-col>
             </el-row>
             <el-row class='mt20'>
-                <el-col :span="4">专栏副标题:</el-col>
+                <el-col :span="4"><span class='my-span-notice'>*</span>专栏副标题:</el-col>
                 <el-col :span="12">   
                     <el-input
                     placeholder="请输入内容"
                     v-model="cloumData.sub_name"
+                    show-word-limit 
+                    maxlength="30"
                     clearable>
                 </el-input>
                 </el-col>
             </el-row>
              <el-row class='mt20'>
-                <el-col :span="4">专栏介绍:</el-col>
+                <el-col :span="4"><span class='my-span-notice'>*</span>专栏介绍:</el-col>
                 <el-col :span="12">   
                     <el-input
                     placeholder="请输入内容"
                     v-model="cloumData.describe"
+                    show-word-limit 
+                    maxlength="300"
                     clearable>
                 </el-input>
                 </el-col>
             </el-row>
-           
+             <el-row class='mt20'>
+                <el-col :span="4"><span class='my-span-notice'>*</span>专栏顺序:</el-col>
+                <el-col :span="12">   
+                    <el-input
+                      placeholder="请输入内容"
+                      v-model="cloumData.sort"
+                      type="number"
+                      clearable>
+                    </el-input>
+                    <p style="color: rgb(153, 153, 153); font-size: 12px;">注：请输入1以上的数字，数字越小，越靠前</p>
+                </el-col>
+            </el-row>
             <el-row class='mt20'>
                  <el-col :span="4"></el-col>
                  <el-button style="width:50%;margin-left:17%;margin-top:10px;" type="primary" @click="sureSubmit">确认提交</el-button>
@@ -142,6 +163,7 @@ import place from "../../../components/place.vue";
 import myUpload from '../../../components/upload';
 import MyPackage from "../../../components/package.vue";
 import mySearch from "../../../components/search.vue";
+import until from '../../../comm/until.js';
 export default {
   name: "columlist",
   data() {
@@ -158,7 +180,8 @@ export default {
         name:'',
         en_name:"",
         sub_name:"",
-        describe:""
+        describe:"",
+        sort:''
       },
       tableData: [],
       total:0,
@@ -234,7 +257,12 @@ export default {
           this.title ='添加专栏'
       },
       columDel(row){
-        this.delCategory({id:row.id})
+        // this.delCategory({id:row.id})
+        let _this =this;
+         until.myConfirm(_this, `是否删除该专栏？`,function(val){
+           _this.delCategory({id:row.id})
+        })
+        // this.confirm("是否删除该专栏？",row.id)
       },
       toCloumDetail(row){
          this.$router.push({
@@ -251,6 +279,26 @@ export default {
         this.cloumData.picture = url;
       },
       sureSubmit(){
+        if(!this.cloumData.picture){
+          this.$message.warning("请上传专栏背景");
+          return;
+        }
+        if(!this.cloumData.name){
+            this.$message.warning("请填写专栏标题");
+          return;
+        }
+        if(!this.cloumData.en_name){
+          this.$message.warning("请填写专栏英文标题");
+          return;
+        }
+         if(!this.cloumData.sub_name){
+          this.$message.warning("请填写专栏副标题");
+          return;
+        }
+        if(!this.cloumData.describe){
+          this.$message.warning("请填写专栏描述");
+          return;
+        }
         if(this.btnType==1){
            this.addCloumFun();
         }else{
@@ -282,13 +330,14 @@ export default {
     }
   .columList-top,
   .columList-cont {
-    padding: 20px;
-    background-color: #fff;
-    border-radius: 8px;
-    overflow: hidden;
+    // padding: 20px;
+    // background-color: #fff;
+    // border-radius: 8px;
+    // overflow: hidden;
+    @extend %extreme;
   }
   .columList-cont {
-    margin-top: 20px;
+    // margin-top: 20px;
     .time {
       display: inline-block;
       vertical-align: top;
@@ -304,10 +353,7 @@ export default {
       }
     }
     .columList-table{
-        border: 1px solid #ebeef5;
-        border-radius: 8px;
-        overflow: hidden;
-        margin-top: 30px;
+       @extend %tableborder;
     }
     .el-table__row{
         img{

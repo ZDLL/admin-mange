@@ -1,7 +1,7 @@
 import apiUrl from '../../config/api.js'
 import axios from "axios"
 import qs from "qs";
-
+import { Message} from "element-ui";
 let loginGetData = function(url,payload){
   let token = window.localStorage.getItem("token");
   let loginToken = token?token:"a70bc1c23ce5a972637adba5954a5acc_api"
@@ -12,6 +12,10 @@ let loginGetData = function(url,payload){
       data:payload,
       headers: {"token":loginToken},
     }).then(data=>{
+      if(data.data.code!=10000){
+        Message.error(data.data.msg)
+        return;
+      }
        res(data)
     }).catch(err=>{
        rej(err)

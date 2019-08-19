@@ -21,7 +21,7 @@ export default {
       //   this.$message.error("请上传正确格式的图片如(jpeg,png)");
       // }
       if (!isLt2M) {
-        this.$message.error("上传头像图片大小不能超过 2MB!");
+        this.$message.error("上传图片大小不能超过 2MB!");
       }
       let formData = new FormData();
       formData.append("file",file)

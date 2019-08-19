@@ -1,9 +1,10 @@
 
-let baseUrl ='/api/'
+// let baseUrl ='/api/'
+let baseUrl ='/'
 module.exports={
     "upload":baseUrl+"backend/common/upload",//上传
     "login":baseUrl+'backend/operator/login',//登录
-    "logout":baseUrl+"/backend/operator/logout",//退出
+    "logout":baseUrl+"backend/operator/logout",//退出
 
     'momentsGetlist':baseUrl+"backend/moments/getlist",//获取帖子列表
     'momentsGetdetail':baseUrl+'backend/moments/getdetail',//获取帖子详情
@@ -31,6 +32,7 @@ module.exports={
     "topicEdit":baseUrl+"backend/topic/edittopic",//编辑话题
     "changeTopic":baseUrl+"backend/topic/changetopic",//上下架话题
     "topicDel":baseUrl+"backend/topic/deltopic",//删除话题
+    "topicRec":baseUrl+"backend/topic/recommend",//话题推荐
     "gettopicmoments":baseUrl+"backend/topic/gettopicmoments",//话题详情中的动态列表
 
     "userList":baseUrl+"backend/users/getlist",//用户列表
@@ -40,6 +42,8 @@ module.exports={
     "userDelCert":baseUrl+"backend/users/delcert",//删除标签
     "addcerttouser":baseUrl+"backend/users/addcerttouser",//给用户添加标签
     "recommenduser":baseUrl+"backend/users/recommenduser",//用户推荐
+    "addsystemuser":baseUrl+"backend/users/addsystemuser",//添加或取消官方账号
+    "getsystemuser":baseUrl+"backend/users/getsystemuser",//获取官方账号
 
     "getcertlist":baseUrl+"backend/users/getcertlist",//获取标签列表
     "addcert":baseUrl+"backend/users/addcert",//添加标签
@@ -56,10 +60,28 @@ module.exports={
     "addAdmin":baseUrl+"backend/operator/addoperator",//添加管理员
     "delAdmin":baseUrl+"backend/operator/deloperator",//删除管理员
     "editPassword":baseUrl+"backend/operator/editpassword",//修改密码
+    "adminGetdetail":baseUrl+"backend/operator/getdetail",//管理员详情
+    "editoperator":baseUrl+"backend/operator/editoperator",//修改管理员
 
     "bannerGetList":baseUrl+"backend/banner/getlist",//获取广告位列表
     "bannerAdd":baseUrl+"backend/banner/addbanner",//添加广告位
     "bannerEdit":baseUrl+"backend/banner/editbanner",//编辑广告位
     "bannerDetail":baseUrl+"backend/banner/getdetail",//广告详情
-    "bannerDel":baseUrl+"backend/banner/delbanner"//删除广告位
+    "bannerDel":baseUrl+"backend/banner/delbanner",//删除广告位
+
+    "adddraft":baseUrl+"backend/subject/adddraft",//添加草稿
+    "getdraftlist":baseUrl+"backend/subject/getdraftlist",//获取草稿列表
+    "getdraftdetail":baseUrl+"backend/subject/getdraftdetail",//获取草稿详情
+    "deldraft":baseUrl+"backend/subject/deldraft",//删除草稿
+
+    "sugGetList":baseUrl+"backend/suggestion/getlist",//反馈列表
+    "delsuggestion":baseUrl+"backend/suggestion/delsuggestion",//删除建议
+
+    "mesgGetList":baseUrl+"backend/message/getlist", //消息列表
+    "mesgGetDetail":baseUrl+"backend/message/getdetail",//消息详情
+    "addsysmessage":baseUrl+"backend/message/addsysmessage",//添加系统消息
+    "editsysmessage":baseUrl+"backend/message/editsysmessage",//编辑系统消息
+    "delsysmessage":baseUrl+"backend/message/delsysmessage",//删除系统消息
+    "pushsysmessage":baseUrl+"backend/message/pushsysmessage",//发送手机消息
+    "artMesgPush":baseUrl+'backend/message/push'//文章推送
 }

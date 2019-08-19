@@ -1,23 +1,23 @@
 <template>
   <div class="addbanner">
-    <myPlace :place-text='"添加广告位"'></myPlace>
+    <myPlace :place-text='t'></myPlace>
     <div class="addbanner-cont">
       <div class="addBanner-warp">
-        <span class="avatar-uploader" @click='uploadClick'>
+        <span class="avatar-uploader" @click="uploadClick">
           <i class="el-icon-plus avatar-uploader-icon"></i>
           <img v-if="postData.picture" :src="postData.picture" alt="头像" />
         </span>
         <myPload @getFile="fileUrlFun"></myPload>
 
         <el-row class="mt20 add-banner-inp">
-          <el-col class="add-banner-left" :span="3">显示或隐藏：</el-col>
+          <el-col class="add-banner-left" :span="3"><span class='my-span-notice'>*</span>显示或隐藏：</el-col>
           <el-col :span="10">
             <el-radio v-model="postData.display" label="1">显示</el-radio>
             <el-radio v-model="postData.display" label="2">隐藏</el-radio>
           </el-col>
         </el-row>
         <el-row class="mt20 add-banner-inp">
-          <el-col class="add-banner-left" :span="3">选择类型：</el-col>
+          <el-col class="add-banner-left" :span="3"><span class='my-span-notice'>*</span>选择类型：</el-col>
           <el-col :span="10">
             <el-select v-model="postData.type" placeholder="请选择">
               <el-option v-for="item in options" :key="item.id" :label="item.name" :value="item.id"></el-option>
@@ -26,7 +26,7 @@
         </el-row>
 
         <el-row class="mt20 add-banner-inp">
-          <el-col class="add-banner-left" :span="3">广告名称：</el-col>
+          <el-col class="add-banner-left" :span="3"><span class='my-span-notice'>*</span>广告名称：</el-col>
           <el-col :span="10">
             <el-input
               type="text"
@@ -37,12 +37,41 @@
             ></el-input>
           </el-col>
         </el-row>
+
         <el-row class="mt20 add-banner-inp">
-          <el-col class="add-banner-left" :span="3">链接网址：</el-col>
+          <el-col class="add-banner-left" :span="3"><span class='my-span-notice'>*</span>跳转方式：</el-col>
+          <el-col :span="10">
+            <el-radio v-model="postData.mode" label="1">链接</el-radio>
+            <el-radio v-model="postData.mode" label="2">app内部</el-radio>
+          </el-col>
+        </el-row>
+        <el-row v-show="postData.mode==1" class="mt20 add-banner-inp">
+          <el-col class="add-banner-left" :span="3"><span class='my-span-notice'>*</span>链接网址：</el-col>
           <el-col :span="10">
             <el-input type="text" placeholder="请输入内容" v-model="postData.redirect_url" clearable></el-input>
           </el-col>
         </el-row>
+
+        <el-row v-show="postData.mode==2" class="mt20 add-banner-inp">
+          <el-col class="add-banner-left" :span="3">选择分类：</el-col>
+          <el-col :span="10">
+            <el-select v-model="postData.page" placeholder="请选择">
+              <el-option
+                v-for="item in pageOptions"
+                :key="item.id"
+                :label="item.name"
+                :value="item.id"
+              ></el-option>
+            </el-select>
+          </el-col>
+        </el-row>
+        <el-row v-show="postData.mode==2" class="mt20 add-banner-inp">
+          <el-col class="add-banner-left" :span="3">文章ID：</el-col>
+          <el-col :span="10">
+            <el-input type="text" placeholder="请输入内容" v-model="postData.page_detail" clearable></el-input>
+          </el-col>
+        </el-row>
+
         <el-button class="mt20 addbannerBtn" type="primary" @click="addBannerOkClick">确定</el-button>
       </div>
     </div>
@@ -51,19 +80,22 @@
 <script>
 import myPload from "../../../components/upload";
 import myPlace from "../../../components/place.vue";
+import { bannerTypeConfig } from "../../../config/objConfig.js";
 export default {
   name: "banneradd",
   data() {
     return {
-        bannerTxt:"",
-      options: [
-        {
-          id: "1",
-          name: "发现"
-        },
+      bannerTxt: "",
+      t:"广告位管理",
+      options: bannerTypeConfig,
+      pageOptions: [
         {
           id: "2",
-          name: "文章"
+          name: "动态"
+        },
+        {
+          id: "3",
+          name: "专栏"
         }
       ],
       bannerId: "",
@@ -73,7 +105,9 @@ export default {
         display: "",
         type: "",
         mode: "1",
-        redirect_url: ""
+        redirect_url: "",
+        page: "",
+        page_detail: ""
       }
     };
   },
@@ -106,6 +140,22 @@ export default {
       });
     },
     addBannerOkClick() {
+      if (
+        !this.postData.name ||
+        !this.postData.picture ||
+        !this.postData.display ||
+        !this.postData.type || 
+        !this.postData.mode
+      ) {
+        this.$message.warning("请查看是否有必填项未填写")
+        return;
+      }
+      if (this.postData.mode == 1) {
+        this.postData.page = "";
+        this.postData.page_detail = "";
+      } else if (this.postData.mode == 2) {
+        this.postData.redirect_url = "";
+      }
       if (this.bannerId) {
         this.postData.id = this.bannerId;
         this.editorBanner(this.postData);
@@ -113,11 +163,11 @@ export default {
         this.setAddBanner(this.postData);
       }
     },
-    uploadClick(){
-         document.querySelector("#uploader").click();
+    uploadClick() {
+      document.querySelector("#uploader").click();
     },
-    fileUrlFun(url){
-        this.postData.picture=url;
+    fileUrlFun(url) {
+      this.postData.picture = url;
     }
   },
   created() {
@@ -125,16 +175,32 @@ export default {
     if (this.bannerId) {
       this.getBannerDetail({ id: this.bannerId });
     }
+  },
+  filters: {
+    bannerType(val) {
+      if (!val) {
+        return;
+      }
+      switch (parseInt(val)) {
+        case 1:
+          return "";
+        case 2:
+          return "动态";
+        case 3:
+          return "专题";
+      }
+    }
   }
 };
 </script>
 <style lang="scss">
 @import "@/style/avatar-uploader.scss";
 .addbanner-cont {
-  padding: 20px;
-  border-radius: 8px;
-  overflow: hidden;
-  background-color: #fff;
+  // padding: 20px;
+  // border-radius: 8px;
+  // overflow: hidden;
+  // background-color: #fff;
+  @extend %extreme;
   .avatar-uploader {
     width: 320px;
   }
