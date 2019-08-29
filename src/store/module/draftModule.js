@@ -28,7 +28,6 @@ const mutations={
         state.addRaftData= data.data
     },
     getRaftListMut(state,data){
-        console.log(data.data)
         state.getRaftListData= data.data
     },
     getRafDetailMut(state,data){

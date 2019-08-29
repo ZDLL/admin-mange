@@ -27,12 +27,16 @@ export default {
     return {
       pageSize: 10, //默认每页10条数据
       total: this.pageTotal,
-      currentPage: 0 //默认第一页开始
+      currentPage: this.pageCurrent //默认第一页开始
     };
   },
   props: {
     pageTotal: {
       type: Number,
+      default: 0
+    },
+    pageCurrent:{
+       type: Number,
       default: 0
     }
   },
@@ -41,6 +45,7 @@ export default {
       this.$emit("handleSize", val);
     },
     handleCurrentChange(val) {
+      // document.getElementById("searchBar").scrollTop = 0
       this.$emit("handleCurrent", val);
     }
   },

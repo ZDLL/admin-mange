@@ -173,7 +173,7 @@ export default {
       this.changePwd = true;
     },
     changePwdBtn(){
-      this.editPasswor({user_id:this.adminId,password:this.changePwd})
+      this.editPasswor({user_id:this.adminId,password:this.changePwdTxt})
     },
     toDeleteClick(row) {
         let _this = this;

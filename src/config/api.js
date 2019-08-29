@@ -83,5 +83,12 @@ module.exports={
     "editsysmessage":baseUrl+"backend/message/editsysmessage",//编辑系统消息
     "delsysmessage":baseUrl+"backend/message/delsysmessage",//删除系统消息
     "pushsysmessage":baseUrl+"backend/message/pushsysmessage",//发送手机消息
-    "artMesgPush":baseUrl+'backend/message/push'//文章推送
+    "artMesgPush":baseUrl+'backend/message/push',//文章推送
+    "commentGetList":baseUrl+"backend/comment/getlist",
+    "delcomment":baseUrl+'backend/comment/delcomment',
+
+    "getselectlist":baseUrl+"backend/subject/getselectlist",//每日精选
+    "getselectdetail":baseUrl+"backend/subject/getselectdetail",
+    "dayaddselect":baseUrl+"backend/subject/addselect",
+    "delselectsubject":baseUrl+"backend/subject/delselectsubject"
 }

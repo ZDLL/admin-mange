@@ -7,6 +7,9 @@ import Viewer from 'v-viewer'
 import 'viewerjs/dist/viewer.css'
 import "element-ui/lib/theme-chalk/index.css"
 import myFilter from './comm/comfilter'
+import myDire from './comm/mydirecctive'
+import VueCropper from 'vue-cropper'
+//import twemoji from 'twemoji'
 
 //富文本
 import VueQuillEditor from "vue-quill-editor"
@@ -17,7 +20,18 @@ import { Message } from "element-ui";
 Vue.use(VueQuillEditor)
 Vue.use(ElementUI)
 Vue.use(Viewer)
+Vue.use(VueCropper)
 Viewer.setDefaults({ zIndexInline: 9999 });
+
+// Vue.directive('emoji', {
+//   inserted (el) {
+//     console.log(el)
+//     console.log(twemoji.parse(el.innerHTML))
+//     el.innerHTML =''
+//     el.innerHTML = twemoji.parse(el.innerHTML)
+//   }
+// })
+
 // Viewer.setDefaults({
 //   Options: { 'inline': true, 'button': true, 'navbar': true, 'title': true, 'toolbar': true, 'tooltip': true, 'movable': true, 'zoomable': true, 'rotatable': true, 'scalable': true, 'transition': true, 'fullscreen': true, 'keyboard': true, 'url': 'data-source' }
 // })
@@ -52,6 +66,11 @@ router.afterEach((to,from)=>{
     }
   }
 })
+// Object.keys(myDire).forEach(key=>{
+//   console.log(key)
+//   Vue.directive(key,myDire[key])
+// })
+
 Object.keys(myFilter).forEach(key => {
   Vue.filter(key, myFilter[key])
 })

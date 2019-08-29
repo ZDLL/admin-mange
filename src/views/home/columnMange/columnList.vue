@@ -86,6 +86,7 @@
                         <img v-if="cloumData.picture" :src="cloumData.picture" alt="头像" />
                         
                     </span>
+                    <p style="margin-top:8px;color: rgb(153, 153, 153); font-size: 12px;">注：请上传375*500的图片</p>
 
                 </el-col>
             </el-row>

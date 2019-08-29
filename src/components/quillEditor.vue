@@ -1,7 +1,7 @@
 <!--重新封装的quillEditor组件--->
 <template>
   <div class="my-quill-editor">
-    <input style="display:none" type="file" @change="updata" ref="contentUpload" id="QuillUploaderImg" />
+    <input style="display:none" type="file" multiple @change="updata" ref="contentUpload" id="QuillUploaderImg" />
     <quill-editor
       class="editor"
       v-model="editorCont"
@@ -14,7 +14,7 @@
   </div>
 </template>
 <script>
-import { quillEditor } from "vue-quill-editor";
+import { Quill,quillEditor } from "vue-quill-editor";
 
 const toolbarOptions = [
   ["bold", "italic", "underline", "strike"], // 加粗 斜体 下划线 删除线
@@ -30,39 +30,73 @@ const toolbarOptions = [
   [{ font: [] }], // 字体种类
   [{ align: [] }], // 对齐方式
   ["clean"], // 清除文本格式
-  ["link", "image"] // 链接、图片、视频
+  ["link", "image"], // 链接、图片、视频
+  ['sourceEditor']
 ];
 export default {
   name: "quilleditor",
   props: ["parentEditorCont"],
   data() {
+    let _this = this;
     return {
       editorOption: {
         placeholder: "你想说点什么",
+        theme: 'snow',  
         modules: {
           toolbar: {
             container: toolbarOptions,
             handlers: {
               image: function(value) {
+               
                 if (value) {
                   // 触发input框选择图片文件
                   document.querySelector("#QuillUploaderImg").click();
                 } else {
                   this.quill.format("image", false);
                 }
+              },
+              shadeBox:null,
+              sourceEditor: function(){     //添加工具方法
+                   let quill = _this.$refs.myQuillEditor.quill;  
+                   let range = quill.getSelection();
+                    quill.insertEmbed(range.index,"div","null")
+                    // quill.insertEmbed(range.index, 'div');
+                    quill.setSelection(range.index + 1);
+                  // quill.pasteHTML(quill.getSelection().index, '<div>');
               }
             }
           }
         }
       },
       editorCont: this.parentEditorCont || "",
-      file: ""
-    };
+      file: "",
+      top:"",
+      scrollObj:""
+    }
   },
   methods: {
-    onEditorBlur(e) {},
-    onEditorFocus(e) {},
-    onEditorChange(e) {
+    onEditorBlur(e) {
+      let scrollObj = document.getElementById("searchBar"); // 滚动区域
+      this.top = scrollObj.scrollTop;
+    },
+    onEditorFocus(e) {
+      let scrollObj = document.getElementById("searchBar"); // 滚动区域
+      let quillDome = document.getElementsByClassName("editor")[0]
+      let st= scrollObj.scrollTop?scrollObj.scrollTop:this.top
+      let quill = this.$refs.myQuillEditor.quill;
+      let range = quill.getSelection();
+      let ran = range.index>260?range.index*1.2:range.index
+      let num = st && st>range.index?st:(st?(st+ran)/2:(0+ran)/2)
+      //  let num = st?(st+ran)/2:(0+ran)/2
+      // console.log("range.index---:"+ran)
+      // console.log("st----:"+st)
+      this.$emit("quillEditorScrollTop", num);
+    },
+    onEditorChange({ quill, html, text }) {
+      console.log(quill)
+      // let quill = this.$refs.myQuillEditor.quill;
+      // let scrollObj = document.getElementById("searchBar"); // 滚动区域
+      // let range = quill.getSelection();
       this.$emit("quillEditorFun", this.editorCont);
     },
     async updata() {
@@ -70,29 +104,67 @@ export default {
       let quill = this.$refs.myQuillEditor.quill;
       let range = quill.getSelection();
       let formData = new FormData();
-      this.file = inputDom.files[0];
-      formData.append("file", this.file);
-      await this.$store.dispatch("comModule/getFileImge",formData)
-      let data = this.$store.state.comModule.quillImg;
-      if (data) {
-        quill.insertEmbed(range.index, "image",data);
-        quill.setSelection(range.index + 1);
-      } else {
-        console.log("图片插入失败");
+      this.file = inputDom.files;
+      if( this.file.length>0){
+        for(let i=0;i< this.file.length;i++){
+            formData.append("file", this.file[i]);
+            await this.$store.dispatch("comModule/getFileImge",formData)
+            let data = this.$store.state.comModule.quillImg;
+            if (data) {
+              quill.insertEmbed(range.index + i, "image",data);
+              quill.setSelection(range.index + (i+1));
+            } else {
+              console.log("图片插入失败");
+            }
+        }
+        
       }
-    }
+     
+    },
+    initButton:function(){      //在使用的页面中初始化按钮样式
+      const sourceEditorButton = document.querySelector('.ql-sourceEditor');
+      sourceEditorButton.style.cssText = "width:20px;color:#333";
+      // sourceEditorButton.innerText="源码编辑";
+       sourceEditorButton.classList.add('el-icon-minus');
+       sourceEditorButton.title = "添加横线";
+
+    },
+    register(q){
+      //注册标签(因为在富文本编辑器中是没有div,table等标签的，需要自己去注册自己需要的标签)
+      class Div extends q.import('blots/block/embed') {
+         static create(value) {
+                let node = super.create(value);
+                node.setAttribute('style', "height:0px; margin-top:10px; margin-bottom:10px;border: 0.5px solid #dcdcdc;height:1px;");
+                return node;
+            }
+      }
+      Div.blotName = 'div';
+      Div.tagName = 'div';
+      q.register(Div);
+    },
   },
   mounted() {
-    // console.log("mmmmmm")
-    // console.log(this.parentEditorCont);
+   this.initButton();
+   
+  },
+  created(){
+    this.register(Quill)
   }
 };
 </script>
 <style lang="scss">
-
+//  .editor p{
+//     text-align: center
+//   }
 .my-quill-editor {
-
+  em{
+    font-style: italic;
+  }
+  strong{
+    font-weight: bold
+  }
   position: relative;
+ 
   .editor{
     // width: 850px;
     .ql-toolbar{

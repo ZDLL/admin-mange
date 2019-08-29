@@ -108,6 +108,16 @@ export default new Router({
         name:"addmessage",
         component:()=>import('./views/home/messageMange/messageAdd.vue')
       },
+      {
+        path:"/comment",
+        name:"comment",
+        component:()=>import('./views/home/commentMange/commentList.vue')
+      },
+      {
+        path:"/select",
+        name:"select",
+        component:()=>import('./views/home/selectMange/selectList.vue')
+      },
     ]
     }
   ]

@@ -9,10 +9,10 @@ let sidebarConfig=[
       url: "/user",
       text: "用户管理"
     },
-    {
-      url: "/tag",
-      text: "标签管理"
-    },
+    // {
+    //   url: "/tag",
+    //   text: "标签管理"
+    // },
     {
       url: "/dynamic",
       text: "动态管理"
@@ -40,7 +40,16 @@ let sidebarConfig=[
     {
       url: "/permis",
       text: "权限管理"
-    },{
+    },
+    // {
+    //   url: "/comment",
+    //   text: "评论管理"
+    // },
+    {
+      url: "/select",
+      text: "每日精选"
+    },
+    {
       url:"/opinion",
       text:"意见反馈"
     },{

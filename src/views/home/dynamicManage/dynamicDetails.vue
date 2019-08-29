@@ -46,6 +46,7 @@
             <div style="text-align: center;margin-top: 10px;">
               <el-button type="primary" size="small" plain @click="recommendBtn">{{recOrNo}}</el-button>
               <el-button style="margin-left:0px;margin-top:10px;" plain size="small" @click="deleteBtn">删除动态</el-button>
+              <el-button style="margin-left:0px;margin-top:10px;" plain size="small" @click="goBackList">返回列表</el-button>
             </div>
           </el-col>
         </el-row>
@@ -94,6 +95,7 @@ export default {
     return {
       id:"",
       detail:{},
+      page:1
     };
   },
   components: {
@@ -135,12 +137,15 @@ export default {
     async isDelMoment(){
       this.$store.dispatch("dynamicModule/delmoment",{id:this.id});
       let data = this.$store.state.dynamicModule.delmoment;
-      this.$message.success("删除成功，一秒后到动态列表");
-      setTimeout(()=>{
-        this.$router.push({
-          path:"/dynamic"
-        })
-      },1000)
+      if(Object.keys(data).length>1){
+         this.$message.success("删除成功，一秒后到动态列表");
+          setTimeout(()=>{
+            this.$router.push({
+              path:"/dynamic"
+            })
+          },1000)
+      }
+     
      
     },
     recommendBtn(){
@@ -156,10 +161,19 @@ export default {
              _this.isDelMoment()
         })
       // this.confirm("是否删除该动态？")
+    },
+    goBackList(){
+       this.$router.push({
+          path:"/dynamic",
+          query:{
+            page:this.page
+          }
+        })
     }
   },
   created() {
     this.id = this.$route.query.id;
+    this.page = this.$route.query.page;
     this.getDetails()
   },
   mounted() {

@@ -52,5 +52,10 @@ export default {
     position: relative;
     top: 2px;
   }
+  .emoji{
+    width: 15px;
+    height: 15px;
+    margin: 1px
+  }
 }
 </style>

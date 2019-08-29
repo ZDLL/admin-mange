@@ -166,7 +166,7 @@ let getData = function(url,payload){
           window.location.href='/'
           return;
         }
-        return;
+        return false;
       }
        res(data)
     }).catch(err=>{

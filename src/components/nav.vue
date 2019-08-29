@@ -1,6 +1,9 @@
 <template>
-  <el-menu :default-active='$route.path | navActive' class="el-menu-vertical-demo" :router="true">
-    <el-menu-item v-for="(itm,index) in navList" :index="itm.url" :key="index">{{itm.text}}</el-menu-item>
+  <el-menu v-if='navList'  :default-active='$route.path | navActive' class="el-menu-vertical-demo" :router="true">
+    <el-menu-item v-for="(itm,index) in navList" :index="itm.url" :key="index">
+      {{itm.text}}
+      <el-badge v-if='itm.badge' is-dot class="item"></el-badge>
+    </el-menu-item>
   </el-menu>
 </template>
 <script>
@@ -10,7 +13,8 @@ export default {
   name: "mynav",
   data() {
     return {
-      navList:sidebarConfig
+      navList:[],
+      dymBadge:false
     };
   },
   filters:{
@@ -22,6 +26,32 @@ export default {
         }
       }
     }
+  },
+  methods:{
+      async getlist(callback){
+        await this.$store.dispatch("dynamicModule/getMomentsList",{status:3})
+        let momentsData = this.$store.state.dynamicModule.momentsData
+        if(momentsData.info.result.length>0){
+          callback(true)
+        }else{
+          callback(false)
+        }
+      },
+    rewriteNav(){
+      let _this = this;
+      for(let i=0;i<sidebarConfig.length;i++){
+          sidebarConfig[i].badge = false;
+        if(sidebarConfig[i].url.indexOf('dynamic')>-1){
+          _this.getlist(function(data){
+              sidebarConfig[i].badge = data;
+          });
+        }
+      }
+      this.navList = sidebarConfig
+    }
+  },
+  created(){
+    this.rewriteNav();
   }
 };
 </script>

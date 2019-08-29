@@ -73,11 +73,12 @@
 
           <el-table-column fixed="right" label="操作" width="240">
             <template slot-scope="scope">
-              <el-button type="text" @click="setSelectBtn(scope.row)">{{scope.row.is_select |select}}</el-button>
+              <!-- <el-button type="text" @click="setSelectBtn(scope.row)">{{scope.row.is_select |select}}</el-button> -->
               <el-button type="text" @click="setIscoverBtn(scope.row)">{{scope.row.is_recommend |iscover }}</el-button>
+                <el-button type="text" @click="articEditor(scope.row)">编辑</el-button>
               <br/>
-              <el-button type="text" @click="articEditor(scope.row)">编辑</el-button>
               <el-button type="text" @click="delArticBtn(scope.row) ">删除</el-button>
+              <el-button type="text" @click="viewComment(scope.row)">查看评论</el-button>
               <el-button type="text" @click="pushArtic(scope.row)">文章推送</el-button>
             </template>
           </el-table-column>
@@ -175,7 +176,7 @@ export default {
         push_time:"",
         title:"",
         content:"",
-        type:'1'
+        type:'2'
       },
       articDetail:{}
     };
@@ -197,16 +198,16 @@ export default {
       this.num = data.info.num;
       this.packTotal = parseInt(data.info.total)
     },
-    async setSelect(prameData) {
-      await this.$store.dispatch("articleModule/addselectAct", prameData);
-      let data = this.$store.state.articleModule.addselect;
-      if (data.info.is_select == 1) {
-        this.$message.success("设置成功推荐成功");
-      } else if (data.info.is_select == 2) {
-        this.$message.success("取消推荐成功");
-      }
-      this.getArticList();
-    },
+    // async setSelect(prameData) {
+    //   await this.$store.dispatch("articleModule/addselectAct", prameData);
+    //   let data = this.$store.state.articleModule.addselect;
+    //   if (data.info.is_select == 1) {
+    //     this.$message.success("设置成功推荐成功");
+    //   } else if (data.info.is_select == 2) {
+    //     this.$message.success("取消推荐成功");
+    //   }
+    //   this.getArticList();
+    // },
     async setIscover(prameData) {
       await this.$store.dispatch("articleModule/adddiscoverAct", prameData);
       let data = this.$store.state.articleModule.adddiscover;
@@ -249,16 +250,16 @@ export default {
       this.postData.page_size = 10;
       this.getArticList()
     },
-    setSelectBtn(row) {
-      let postData = {
-        id: row.id
-      };
-      let _this = this;
-      until.myConfirm(_this, `是否确认进行投放精选的操作？`,function(val){
-         _this.setSelect(postData);
-      })
+    // setSelectBtn(row) {
+    //   let postData = {
+    //     id: row.id
+    //   };
+    //   let _this = this;
+    //   until.myConfirm(_this, `是否确认进行投放精选的操作？`,function(val){
+    //      _this.setSelect(postData);
+    //   })
      
-    },
+    // },
     setIscoverBtn(row) {
       let postData = {
         id: row.id
@@ -299,6 +300,17 @@ export default {
     pushArtic(row){
       this.timeDialog=true;
       this.articDetail = row;
+    },
+    viewComment(row){
+        this.$router.push({
+          path: "/comment",
+          query:{
+            id:row.id,
+            type:2,
+            title:row.title
+          }
+          
+        });
     },
     timeChange(val){
       // console.log(val)

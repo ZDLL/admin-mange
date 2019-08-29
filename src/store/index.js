@@ -13,6 +13,8 @@ import bannerModule from './module/bannerModule.js'
 import draftModule from './module/draftModule.js'
 import opinionModule from './module/opinionModule.js'
 import msgModule from './module/msgModule.js'
+import comentModule from './module/commentModule.js'
+import selsectModule from './module/selectModule.js'
 Vue.use(Vuex)
 export default new Vuex.Store({
   modules: {
@@ -28,6 +30,8 @@ export default new Vuex.Store({
     bannerModule,
     draftModule,
     opinionModule,
-    msgModule
+    msgModule,
+    comentModule,
+    selsectModule
   }
 })

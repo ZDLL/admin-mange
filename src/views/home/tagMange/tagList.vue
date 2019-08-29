@@ -26,7 +26,7 @@
        </div>
        <!-- 弹出层 -->
     <el-dialog title="添加标签" :visible.sync="tagDialog">
-        <el-input v-model="tagTxt" show-word-limit  maxlength="15" placeholder="请输入内容"></el-input>
+        <el-input v-model="tagTxt" show-word-limit  maxlength=30 placeholder="请输入内容"></el-input>
       <div slot="footer" class="dialog-footer">
         <el-button @click="tagDialog = false">取 消</el-button>
         <el-button type="primary" @click='cerBtn'>确 定</el-button>

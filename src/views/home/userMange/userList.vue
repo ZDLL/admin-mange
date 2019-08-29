@@ -25,6 +25,7 @@
         <el-button type="primary" plain @click="viewBastUser(2)">全部</el-button>
         <el-button type="primary" plain @click="viewBastUser(1)">推荐用户</el-button>
         <el-button type="primary" plain @click="viewBastUser(3)">官方账号</el-button>
+        <el-button type="primary" plain @click="viewBastUser(4)">冻结账号</el-button>
        
       </el-button-group>
        <mySearch style="margin-left:20px" :holder-txt='placehover' @searchVal='getSearchVal'/>
@@ -120,6 +121,7 @@ export default {
   name: "userlist",
   data() {
     return {
+      s:"123456",
       dialogFormVisible: false,
       recDialog:false,
       tag: "",
@@ -250,11 +252,17 @@ export default {
       this.seachData.current_page=1;
       if(type ==1){
          this.seachData.is_recommend =1;
+         this.seachData.is_forbidden ="";
       }else if(type ==2){
         this.seachData.is_system="";
         this.seachData.is_recommend ="";
+         this.seachData.is_forbidden ="";
       }else if(type ==3){
         this.seachData.is_system =1;
+         this.seachData.is_forbidden ="";
+      }else if(type ==4){
+         this.seachData.is_system ="";
+         this.seachData.is_forbidden =1;
       }
       this.getUserList(this.seachData);
     },
@@ -311,6 +319,9 @@ export default {
           margin-right: 0px;
     }
   .el-button-group .el-button--primary:first-child{
+    border-right-color: #b3d8ff;
+  }
+  .el-button-group .el-button--primary:not(:first-child):not(:last-child){
     border-right-color: #b3d8ff;
   }
 }

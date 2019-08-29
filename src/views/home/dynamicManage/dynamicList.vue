@@ -42,6 +42,11 @@
             :label="itm.label"
           ></el-table-column >
 
+          <el-table-column label="动态描述">
+            <template slot-scope="scope">
+              <span v-html="mytwemoji.parse(scope.row.describe)"></span>
+            </template>
+          </el-table-column>
 
           <el-table-column label="类型">
             <template slot-scope="scope">
@@ -66,13 +71,15 @@
               <el-button type="text" v-if='scope.row.status==3' @click="throughOrRefused(scope.row,2)">拒绝</el-button>
               <!-- <el-button type="text" @click="recommendBtn(scope.row)">推荐</el-button> -->
               <el-button type="text" @click="dynToView(scope.row)">查看</el-button>
-              <el-button type="text" @click="pushDynClick(scope.row)">动态推送</el-button>
+              <br/>
+              <el-button v-if='scope.row.status==1' type="text" @click="pushDynClick(scope.row)">动态推送</el-button>
+              <el-button type="text" @click="viewComment(scope.row)">查看评论</el-button>
             </template>
           </el-table-column>
         </el-table>
       </div>
 
-      <my-package :page-total='total' :key='total' @handleCurrent='handleCurrentFun'></my-package>
+      <my-package :page-total='total' :page-current='postData.current_page' :key='total' @handleCurrent='handleCurrentFun'></my-package>
     </div>
 
     
@@ -135,11 +142,13 @@ import search from "../../../components/search.vue";
 import MyPackage from "../../../components/package.vue";
 import MyDatePicker from "../../../components/datepicker.vue";
 import until from '../../../comm/until.js'
+import twemoji from 'twemoji'
 export default {
   name: "dynamicmange",
   data() {
     return {
       time: "",
+      mytwemoji:twemoji,
       placehover:"昵称",
       tableHead: [
         { prop: "id", label: "动态ID" },
@@ -147,7 +156,9 @@ export default {
         { prop: "cert", label: "标签" },
         { prop: "create_time", label: "发布时间" },
         { prop: "topic", label: "所属话题" },
-        { prop: "describe", label: "动态描述" },
+        // { prop: "describe", label: "动态描述" },
+        {prop: "comment", label: "评论数"}
+        //comment
         // { prop: "publish_type", label: "类型" },
         // { prop: "status", label: "状态" }
       ],
@@ -159,7 +170,7 @@ export default {
         start_time:'',
         end_time:'',
         page_size:'',
-        current_page:''
+        current_page:1
       },
       tableData:[],
       timeDialog:false,
@@ -167,7 +178,7 @@ export default {
         push_time:"",
         title:"",
         content:"",
-        type:'2'
+        type:'1'
       },
       dynDetail:{}
     };
@@ -220,12 +231,24 @@ export default {
         this.getArticList()
     },
     dynToView(row) {
+      // console.log(this.postData.current_page)
       this.$router.push({
         path: "/dynamicdetail",
         query:{
-          id:row.id
+          id:row.id,
+          page:this.postData.current_page
         }
       });
+    },
+    viewComment(row){
+        this.$router.push({
+          path: "/comment",
+          query:{
+            id:row.id,
+            type:1,
+            title:row.topic
+          }
+        });
     },
     getSearchVal(val){
         this.postData ={};
@@ -240,6 +263,9 @@ export default {
          }else{
             this.postData.status = '';
          }
+         this.postData.start_time='';
+         this.postData.end_time=''
+         this.postData.current_page=1;
          this.getlist()
     },
     handleCurrentFun(val){
@@ -290,10 +316,9 @@ export default {
            _this.pushMsg(_this.pushMsgData)
       })
     }
-
-
   },
   created() {
+    this.postData.current_page = this.$route.query.page || 1
     this.getlist()
   },
   mounted() {

@@ -70,6 +70,7 @@
               <i class="el-icon-plus avatar-uploader-icon"></i>
               <img v-if="topicPostData.picture" :src="topicPostData.picture" alt="头像" />
             </span>
+            <p style="margin-top:8px;color: rgb(153, 153, 153); font-size: 12px;">注：请上传150*150的图片</p>
             <upload @getFile='getImgUrl'></upload>
           </el-col>
         </el-row>
@@ -95,6 +96,7 @@
           <el-col :span="4"><span class='my-span-notice'>*</span>设置话题顺序:</el-col>
           <el-col :span="12">
             <el-input type="number" placeholder="请输入1以上的数字" v-model="topicPostData.sort" clearable></el-input>
+            <p style="color: rgb(153, 153, 153); font-size: 12px;">注：请输入1以上的数字，数字越小，越靠前</p>
           </el-col>
         </el-row>
 
@@ -138,7 +140,7 @@ export default {
       tableHead: [
         // { prop: "describe", label: "话题描述" },
         { prop: "id", label: "话题ID" },
-        // { prop: "picture", label: "话题头像" },
+        { prop: "name", label: "话题标题" },
         { prop: "sort", label: "话题顺序" },
         // { prop: "status", label: "是否上架" },
         { prop: "publish_num", label: "动态数" }

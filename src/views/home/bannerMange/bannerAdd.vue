@@ -5,8 +5,9 @@
       <div class="addBanner-warp">
         <span class="avatar-uploader" @click="uploadClick">
           <i class="el-icon-plus avatar-uploader-icon"></i>
-          <img v-if="postData.picture" :src="postData.picture" alt="头像" />
+          <img v-if="postData.picture_url" :key='postData.picture_url' :src="postData.picture_url" alt="广告" />
         </span>
+          <p style="margin-top:8px;color: rgb(153, 153, 153); font-size: 12px;">注：请上传360*50的图片</p>
         <myPload @getFile="fileUrlFun"></myPload>
 
         <el-row class="mt20 add-banner-inp">
@@ -102,6 +103,7 @@ export default {
       postData: {
         name: "",
         picture: "",
+        picture_url:"",
         display: "",
         type: "",
         mode: "1",
@@ -121,7 +123,7 @@ export default {
       let data = this.$store.state.bannerModule.bannerDetailData;
       this.postData = data.info;
       this.postData.mode = "1";
-      this.postData.picture = data.info.picture_url || "";
+      // this.postData.picture = data.info.picture_url || "";
     },
     async editorBanner(objData) {
       await this.$store.dispatch("bannerModule/setEditorBannerAct", objData);
@@ -142,7 +144,7 @@ export default {
     addBannerOkClick() {
       if (
         !this.postData.name ||
-        !this.postData.picture ||
+        !this.postData.picture_url ||
         !this.postData.display ||
         !this.postData.type || 
         !this.postData.mode
@@ -150,6 +152,7 @@ export default {
         this.$message.warning("请查看是否有必填项未填写")
         return;
       }
+      this.postData.picture = this.postData.picture_url;
       if (this.postData.mode == 1) {
         this.postData.page = "";
         this.postData.page_detail = "";
@@ -167,7 +170,7 @@ export default {
       document.querySelector("#uploader").click();
     },
     fileUrlFun(url) {
-      this.postData.picture = url;
+      this.postData.picture_url = url;
     }
   },
   created() {
@@ -175,6 +178,9 @@ export default {
     if (this.bannerId) {
       this.getBannerDetail({ id: this.bannerId });
     }
+  },
+  watch:{
+
   },
   filters: {
     bannerType(val) {
@@ -211,12 +217,12 @@ export default {
     margin-left: 13%;
     width: 120px;
   }
-  .addBanner-warp {
-    max-width: 1000px;
-    margin-left: 30px;
-    // min-height: px;
-    // margin: 0 auto;
-  }
+  // .addBanner-warp {
+  //   max-width: 1000px;
+  //   margin-left: 30px;
+  //   // min-height: px;
+  //   // margin: 0 auto;
+  // }
 }
 </style>
 

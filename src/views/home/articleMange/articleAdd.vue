@@ -2,12 +2,19 @@
   <div class="arcticle-page">
     <my-place :place-text="tit"></my-place>
     <div class="article-cont">
-       <div v-if="hasQuill" style="margin-bottom:20px">
-        <my-quillEditor v-if="quillCont" :parentEditorCont="quillCont" @quillEditorFun="getcont"></my-quillEditor>
+      
+       <div style="margin-bottom:20px">
+         
+            <editor id="tinymce" v-model="postData.content" :init="init"></editor>
+             <p style="color:#666; font-size: 12px;margin-top: 8px;">注：如设置富文本中的图片宽度最好设置为340，若不设置，则最大宽度为100%</p>
+        </div>
+        
+       <!-- <div v-if="hasQuill" style="margin-bottom:20px">
+        <my-quillEditor v-if="quillCont" :parentEditorCont="quillCont" @quillEditorFun="getcont" @quillEditorScrollTop='getEditorScrollTop'></my-quillEditor>
       </div>
       <div v-else style="margin-bottom:20px">
-        <my-quillEditor :parentEditorCont='""' @quillEditorFun="getcont"></my-quillEditor>
-      </div>
+        <my-quillEditor :parentEditorCont='""' @quillEditorFun="getcont" @quillEditorScrollTop='getEditorScrollTop'></my-quillEditor>
+      </div> -->
       <div class="avatar">
         <span class='my-span-notice'>*</span>上传封面:
         <span class="avatar-uploader left10" @click="avatarUpload">
@@ -16,7 +23,7 @@
           <!-- <el-image v-if="imageUrl" :src="imageUrl" lazy></el-image> -->
         </span>
         <my-upload @getFile="fileUrlFun"></my-upload>
-        <p style="color: rgb(153, 153, 153); font-size: 12px;margin-left: 82px;margin-top: 8px"><span style="color:red">注</span>：封面请上传375*256的倍数</p>
+        <p style="color: rgb(153, 153, 153); font-size: 12px;margin-left: 82px;margin-top: 8px">注：封面请上传375*257的图片</p>
       </div>
       <div class="mgt20">
         <span class='my-span-notice'>*</span>标题:
@@ -62,13 +69,13 @@
       </div>-->
 
       <el-button class='mybtnstyle' @click="articleSure" type="primary">确认发布</el-button>
-      <el-button class='mybtnstyle' @click="draftClick" plain type="primary">添加草稿</el-button>
+      <el-button class='mybtnstyle' @click="draftClick" plain type="primary">保存</el-button>
 
       <el-button class='mybtnstyle' @click='previewClick'>预览文章</el-button>
 
       
     </div>
-
+    <!-- <myCropper></myCropper> -->
     <!-- 预览弹层 -->
     <div class='preview' v-show='preview'>
      
@@ -97,7 +104,7 @@
                 
               </div>
               <div class='xian'></div>
-              <div class='text ql-editor' v-html='postData.content'>
+              <div class='text' v-html='postData.content'>
               </div>
             </div>
           </div>
@@ -109,9 +116,20 @@
 <script>
 import place from "../../../components/place.vue";
 import upload from "../../../components/upload.vue";
-import quillEditor from "../../../components/quillEditor.vue";
+// import quillEditor from "../../../components/quillEditor.vue";
+import myCropper from '../../../components/myCropper.vue'
+
 import { constants } from "crypto";
 import { setTimeout } from 'timers';
+
+import tinymce from 'tinymce/tinymce'
+import Editor from '@tinymce/tinymce-vue'
+import 'tinymce/themes/silver'
+import 'tinymce/plugins/image'// 插入上传图片插
+import 'tinymce/plugins/lists'// 列表插件
+import 'tinymce/plugins/paste'
+import 'tinymce/plugins/autoresize';
+import 'tinymce/plugins/lineheight'
 export default {
   name: "addarticle",
   data() {
@@ -136,13 +154,50 @@ export default {
       pos:0,
       categoryName:'',
       is_draft:false,
-      draft_id:""
+      draft_id:"",
+      top:'',
+      init:{
+          language_url: '/tinymce/langs/zh_CN.js',
+          language: 'zh_CN',
+          skin_url: '/tinymce/skins/ui/oxide',
+          // height: 800,
+          elementpath: false,
+          min_height:300,
+          formats:{
+              pre:{block:'div',classes: 'myclass1'},
+              // pre: { selector: 'pre', styles: {'color':'red'} }
+          },
+          content_style: '.myclass1{color:#999;font-size:12px}',
+          // selector: "textarea",
+          // theme : "advanced",
+          plugins: 'lists image paste autoresize lineheight',
+          toolbar: 'undo redo |  formatselect | bold italic forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | lists image | removeformat paste | lineheight',
+          autoresize_bottom_margin: 0, 
+          autoresize_on_init: true,
+          // autoresize_overflow_padding: 8,
+          branding: false,
+          menubar: false,
+          convert_urls: false ,
+          image_advtab: false, //开启图片上传的高级选项功能
+          images_upload_credentials:true,
+          paste_as_text: true,
+          paste_data_images: true, // 粘贴的同时能把内容里的图片自动上传，非常强力的功能
+          images_upload_url:"/backend/common/uploadwords",
+          images_reuse_filename: true,
+          image_title:false,
+          automatic_uploads:true,
+          // theme_advanced_toolbar_location :"top",
+          paste_preprocess: function(plugin, args) {
+              args.content += '';
+          }
+      }
     };
   },
   components: {
     "my-place": place,
     "my-upload": upload,
-    "my-quillEditor": quillEditor
+    Editor,
+    myCropper
   },
   computed: {},
   methods: {
@@ -154,9 +209,7 @@ export default {
       }
     },
     async addArticle() {
-      // this.postData.content=`<div>${this.postData.content.replace(/\<p>/g, "<p style='line-height:20px;'>")}</div>`;
-      // console.log(this.postData.content)
-      // return false
+   
       await this.$store.dispatch("articleModule/arcticleAddAct", this.postData);
       let data = this.$store.state.articleModule.arcticleAdd;
       if (data.code == 10000) {
@@ -234,10 +287,10 @@ export default {
     fileUrlFun(url) {
       this.postData.picture = url;
     },
-    getcont(cont) {
-      this.cont = cont
-      this.postData.content = cont;
-    },
+    // getcont(cont) {
+    //   this.cont = cont
+    //   this.postData.content = cont;
+    // },
     articleSure() {
       if(!this.postData.content){
         this.$message.warning("请填写文章内容");
@@ -259,8 +312,6 @@ export default {
         this.$message.warning("请选择专栏");
         return;
       }
-
-
 
       if (this.id) {
         this.editorArticle();
@@ -286,18 +337,18 @@ export default {
     handleScroll(){
       let scrollObj = document.getElementById("searchBar"); // 滚动区域
       let scrollTop = scrollObj.scrollTop; // div 到头部的距离
-      let dom = document.getElementsByClassName("ql-toolbar")[0];
-      let editorDom = document.getElementsByClassName("ql-editor")[0]
-      if(!dom || !editorDom){
+      let dom = document.getElementsByClassName("tox-toolbar")[0];
+      // let editorDom = document.getElementsByClassName("ql-editor")[0]
+      if(!dom){
         return;
       }
       if(scrollTop>50){
-          dom.classList.add("ql-toolbar-fixed");
-          editorDom.classList.add("editorPaddind")
+          dom.classList.add("toolbar-fixed-top0");
+          // editorDom.classList.add("editorPaddind")
       }
       if(scrollTop==0){
-         dom.classList.remove("ql-toolbar-fixed");
-        editorDom.classList.remove("editorPaddind")
+         dom.classList.remove("toolbar-fixed-top0");
+        // editorDom.classList.remove("editorPaddind")
       }
     },
     draftClick(){
@@ -306,6 +357,12 @@ export default {
         this.postData.draft_id= this.draft_id
       }
       this.addDraft(this.postData)
+    },
+    getEditorScrollTop(top){
+      this.top = top
+      let scrollObj = document.getElementById("searchBar"); // 滚动区域
+      let scrollTop = scrollObj.scrollTop; // div 到头部
+       scrollObj.scrollTop= top;
     }
   },
   created() {
@@ -331,21 +388,30 @@ export default {
      
   },
   mounted() {
+     tinymce.init({})
     window.addEventListener('scroll', this.handleScroll,true)
   },
   destroyed () {//离开该页面需要移除这个监听的事件
     window.removeEventListener('scroll', this.handleScroll)
-     
   },
-  watch:{
-    cont(o,n){
-      if(o!=n){
-         let scrollObj = document.getElementById("searchBar"); // 滚动区域
-        let scrollTop = scrollObj.scrollTop; // div 到头部的距离
-        scrollObj.scrollTop = scrollObj.scrollHeight;
-      }
-    }
-  },
+  // watch:{
+  //   cont(o,n){
+  //     if(o!=n){
+  //       let _this =this
+  //       let scrollObj = document.getElementById("searchBar"); // 滚动区域
+  //       let scrollTop = scrollObj.scrollTop; // div 到头部的距离
+  //       let quillDome = document.getElementsByClassName("editor")[0]
+  //       if(_this.top){
+  //             scrollObj.scrollTop= _this.top;
+  //       }else{
+  //           setTimeout(()=>{
+  //               let num  = parseInt(quillDome.clientHeight) //scrollObj.scrollHeight;
+  //               scrollObj.scrollTop=num;
+  //           },200)
+  //       }
+  //     }
+  //   }
+  // },
   
   fliters: {}
 };
@@ -380,8 +446,31 @@ export default {
     .avatar-uploader {
       width: 300px;
     }
+    .ql-editor{
+      em{
+        font-style: italic;
+      }
+      strong{
+        font-weight: bold
+      }
+    }
     .ql-snow .ql-editor img{
-      max-width: 200px;
+      max-width: 400px;
+      display: block;
+      margin: 4px auto;
+    }
+    .tox-toolbar{
+      background-color: #fff;
+    }
+    .toolbar-fixed-top0{
+        position: fixed;
+        left: 240px;
+        top:22px;
+         z-index: 99;
+        border-top: 1px #ccc solid;
+        width: calc(100% - 297px);
+        border-left: 1px #ccc solid;
+        border-right: 1px #ccc solid;
     }
   }
   .preview{
@@ -502,13 +591,15 @@ export default {
             margin-top: 30px;
             font-size: 14px;
             color:rgba(29,30,44,1);
-            line-height: 1.8;
+            // line-height: 1.8;
             letter-spacing: 1px;
             margin-bottom: 30px;
             padding: 0px;
+            // text-align: center;
             img{
-              width: 100%;
-              height: 200px;
+              max-width: 100%;
+              height: auto;
+              // height: 200px;
               margin-top: 3px;
               margin-bottom: 3px;
               text-align: center;

@@ -2,12 +2,16 @@
     <div class="addMsg-page">
         <myPlace :place-text="t"></myPlace>
         <div class="addMsg-con">
-            <div v-if="hasQuill" style="margin-bottom:20px">
-                <quillEditor v-if="quillCont" :parentEditorCont="quillCont" @quillEditorFun="getcont"></quillEditor>
+            <div style="margin-bottom:20px">
+                <editor id="tinymce" v-model="sendData.content_detail" :init="init"></editor>
+            </div>
+            
+            <!-- <div v-if="hasQuill" style="margin-bottom:20px">
+                <quillEditor v-if="quillCont" :parentEditorCont="quillCont" @quillEditorFun="getcont" @quillEditorScrollTop='getEditorScrollTop'></quillEditor>
             </div>
             <div v-else style="margin-bottom:20px">
-                <quillEditor :parentEditorCont='""' @quillEditorFun="getcont"></quillEditor>
-            </div>
+                <quillEditor :parentEditorCont='""' @quillEditorFun="getcont" @quillEditorScrollTop='getEditorScrollTop'></quillEditor>
+            </div> -->
             <el-row style="margin-bottom:20px">
                 <el-col :span="3"><span class='my-span-notice'>*</span>消息标题：</el-col>
                 <el-col :span="8">
@@ -41,7 +45,17 @@
 <script>
 import myPlace from "../../../components/place.vue";
 import until from "../../../comm/until.js";
-import quillEditor from "../../../components/quillEditor.vue";
+// import quillEditor from "../../../components/quillEditor.vue";
+// import tinyEditor from '../../../components/tinymceEditor.vue'
+import { setTimeout } from 'timers';
+
+import tinymce from 'tinymce/tinymce'
+import Editor from '@tinymce/tinymce-vue'
+import 'tinymce/themes/silver'
+import 'tinymce/plugins/image'// 插入上传图片插
+import 'tinymce/plugins/lists'// 列表插件
+import 'tinymce/plugins/paste'
+import 'tinymce/plugins/autoresize'
 export default {
     name:"addmsg",
     data(){
@@ -54,12 +68,40 @@ export default {
                 title:"",
                 content:"",
                 content_detail:""
+            },
+            top:"",
+            cont:"",
+            init:{
+                language_url: '/tinymce/langs/zh_CN.js',
+                language: 'zh_CN',
+                skin_url: '/tinymce/skins/ui/oxide',
+                // height: 800,
+                plugins: 'lists image paste autoresize',
+                toolbar: 'undo redo |  formatselect | bold italic forecolor backcolor | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | lists image | removeformat paste',
+                branding: false,
+                autoresize_bottom_margin: 0, 
+                autoresize_on_init: true,
+                // autoresize_overflow_padding: 8,
+                menubar: false,
+                convert_urls: false ,
+                image_advtab: false, //开启图片上传的高级选项功能
+                images_upload_credentials:true,
+                paste_as_text: true,
+                paste_data_images: true, // 粘贴的同时能把内容里的图片自动上传，非常强力的功能
+                images_upload_url:"/backend/common/uploadwords",
+                images_reuse_filename: true,
+                image_title:false,
+                automatic_uploads:true,
+                paste_preprocess: function(plugin, args) {
+                    args.content += '';
+                }
             }
         }
     },
     components:{
         myPlace,
-        quillEditor
+        // quillEditor,
+        Editor
     },
     methods:{
         async addMsg(postData){
@@ -74,8 +116,6 @@ export default {
         async getMsgDetail(postData){
             await this.$store.dispatch('msgModule/mesgGetDetailArt',postData);
             let data = this.$store.state.msgModule.mesgGetDetailData;
-            console.log("打印info----")
-            console.log(data.info)
             this.sendData.title  = data.info.title;
             this.sendData.content  = data.info.content;
             this.sendData.content_detail  = data.info.content_detail;
@@ -91,6 +131,7 @@ export default {
         },
         getcont(cont){
             this.sendData.content_detail = cont
+            this.cont = cont;
         },
         msgSureClick(){
             if(!this.sendData.content_detail){
@@ -113,6 +154,20 @@ export default {
                 this.addMsg(this.sendData)
             }
             
+        },
+        handleScroll(){
+            let scrollObj = document.getElementById("searchBar"); // 滚动区域
+            let scrollTop = scrollObj.scrollTop; // div 到头部的距离
+            let dom = document.getElementsByClassName("tox-toolbar")[0];
+            if(!dom){
+                return;
+            }
+            if(scrollTop>50){
+                dom.classList.add("toolbar-fixed-top0");
+            }
+            if(scrollTop==0){
+                dom.classList.remove("toolbar-fixed-top0");
+            }
         }
     },
     filters:{},
@@ -121,15 +176,38 @@ export default {
         if(this.id){
             this.getMsgDetail({id:this.id})
             this.hasQuill = true
-        }
+        };
+        window.removeEventListener('scroll', this.handleScroll)
     },
-    mounted(){}
+    mounted(){
+         tinymce.init({})
+        window.addEventListener('scroll', this.handleScroll,true)
+    }
 }
 </script>
 <style lang="scss">
         .addMsg-page{
             .addMsg-con{
                  @extend %extreme;
+                 img{
+                     width: 200px;
+                 }
+                // .tox-statusbar{
+                //     display: none
+                // }
+                .tox-toolbar{
+                    background-color: #fff;
+                }
+                .toolbar-fixed-top0{
+                    position: fixed;
+                    left: 240px;
+                    top:22px;
+                    z-index: 99;
+                    border-top: 1px #ccc solid;
+                    width: calc(100% - 297px);
+                    border-left: 1px #ccc solid;
+                    border-right: 1px #ccc solid;
+                }
             }
         }
 </style>
